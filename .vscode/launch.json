@@ -1,0 +1,13 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "cppdbg",
+            "request": "launch",
+            "name": "Run Main",
+            "program": "${workspaceRoot}/build/hw3_main",
+            "cwd": "${workspaceFolder}",
+            "preLaunchTask": "Build",
+        },
+    ],
+}

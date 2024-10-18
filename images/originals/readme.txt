@@ -1,0 +1,1 @@
+A set of backup copies of images. Used during testing.
