@@ -2,10 +2,6 @@
 #include "image.h"
 #include <math.h>
 
-#include "qtree.h"
-#include "image.h"
-#include <math.h>
-
 QTNode *create_quadtree_helper(Image *image, int row, int col, int width, int height, double max_rmse)
 {
     QTNode *node = (QTNode *)malloc(sizeof(QTNode));
@@ -25,7 +21,7 @@ QTNode *create_quadtree_helper(Image *image, int row, int col, int width, int he
     }
     int num_pixels = width * height;
     double avg_intensity = total_intensity / num_pixels;
-    node->intensity = (unsigned char)round(avg_intensity);
+    node->intensity = (unsigned char)(avg_intensity + 0.5);
 
     double rmse = 0;
     for (int i = row; i < row + height; i++)
@@ -42,13 +38,11 @@ QTNode *create_quadtree_helper(Image *image, int row, int col, int width, int he
     {
         int half_width = width / 2;
         int half_height = height / 2;
-        int extra_width = width % 2;
-        int extra_height = height % 2;
 
-        node->children[0] = create_quadtree_helper(image, row, col, half_width + extra_width, half_height + extra_height, max_rmse);
-        node->children[1] = create_quadtree_helper(image, row, col + half_width + extra_width, half_width, half_height + extra_height, max_rmse);
-        node->children[2] = create_quadtree_helper(image, row + half_height + extra_height, col, half_width + extra_width, half_height, max_rmse);
-        node->children[3] = create_quadtree_helper(image, row + half_height + extra_height, col + half_width + extra_width, half_width, half_height, max_rmse);
+        node->children[0] = create_quadtree_helper(image, row, col, half_width, half_height, max_rmse);
+        node->children[1] = create_quadtree_helper(image, row, col + half_width, half_width, half_height, max_rmse);
+        node->children[2] = create_quadtree_helper(image, row + half_height, col, half_width, half_height, max_rmse);
+        node->children[3] = create_quadtree_helper(image, row + half_height, col + half_width, half_width, half_height, max_rmse);
 
         node->is_leaf = 0;
     }
