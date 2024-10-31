@@ -17,11 +17,11 @@ Image *load_image(char *filename)
     }
 
     unsigned short width, height;
-    unsigned short max_value; // Declare max_value but do not use it
+    unsigned short max_value; 
     if (fscanf(file, "%hu %hu %hu", &width, &height, &max_value) != 3)
     {
         fclose(file);
-        return NULL; // Handle potential read failure
+        return NULL; 
     }
 
     Image *image = (Image *)malloc(sizeof(Image));
