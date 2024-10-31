@@ -14,9 +14,9 @@ Image *load_image(char *filename)
         return NULL;
     }
 
-    unsigned short width, height;
-    fscanf(file, "%hu %hu", &width, &height);
-
+    unsigned short width, height, max_value;
+    fscanf(file, "%hu %hu %hu", &width, &height, &max_value);
+    
     Image *image = (Image *)malloc(sizeof(Image));
     if (!image) 
     {
@@ -34,9 +34,14 @@ Image *load_image(char *filename)
     }
 
     unsigned int intensity;
-    for (unsigned int i = 0; i < width * height; )
+    unsigned int pixel_count = 0; 
+    while (pixel_count < width * height) 
     {
-        while (fscanf(file, "%u", &intensity) != 1)
+        if (fscanf(file, "%u", &intensity) == 1) 
+        {
+            image->data[pixel_count++] = (unsigned char)intensity;
+        } 
+        else 
         {
             char c;
             while ((c = fgetc(file)) != '\n' && c != EOF) 
@@ -44,17 +49,15 @@ Image *load_image(char *filename)
                 if (c == '#') 
                 {
                     while (fgetc(file) != '\n' && !feof(file));
-                    break;
+                    break; 
                 }
             }
         }
-        image->data[i++] = (unsigned char)intensity;
     }
 
     fclose(file);
     return image;
 }
-
 void delete_image(Image *image)
 {
     if (image) 
