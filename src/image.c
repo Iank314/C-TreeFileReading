@@ -19,7 +19,7 @@ unsigned char get_image_intensity(Image *image, unsigned int row, unsigned int c
 unsigned short get_image_width(Image *image);
 unsigned short get_image_height(Image *image);
 
-#endif
+#endif // IMAGE_H
 
 void skip_comments(FILE *file) 
 {
@@ -134,12 +134,10 @@ unsigned short get_image_width(Image *image)
     return image->width;
 }
 
-
 unsigned short get_image_height(Image *image) 
 {
     return image->height;
 }
-
 
 unsigned int hide_message(char *message, char *input_filename, char *output_filename) 
 {
