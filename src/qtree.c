@@ -21,7 +21,7 @@ QTNode *create_quadtree_helper(Image *image, int row, int col, int width, int he
     }
     int num_pixels = width * height;
     double avg_intensity = total_intensity / num_pixels;
-    node->intensity = (unsigned char)(avg_intensity + 0.5);
+    node->intensity = (unsigned char)avg_intensity;
 
     double rmse = 0;
     for (int i = row; i < row + height; i++)
@@ -48,7 +48,10 @@ QTNode *create_quadtree_helper(Image *image, int row, int col, int width, int he
     }
     else
     {
-        node->children[0] = node->children[1] = node->children[2] = node->children[3] = NULL;
+        for (int i = 0; i < 4; i++)
+        {
+            node->children[i] = NULL;
+        }
         node->is_leaf = 1;
     }
 
@@ -59,6 +62,7 @@ QTNode *create_quadtree(Image *image, double max_rmse)
 {
     return create_quadtree_helper(image, 0, 0, get_image_width(image), get_image_height(image), max_rmse);
 }
+
 QTNode *get_child1(QTNode *node)
 {
     return node ? node->children[0] : NULL;
