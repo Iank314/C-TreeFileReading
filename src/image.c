@@ -18,10 +18,12 @@ Image *load_image(char *filename)
     }
 
     int ch;
-    do {
+    do 
+    {
         ch = fgetc(file);
         if (ch == '#') while (fgetc(file) != '\n');
-    } while (ch == '#' || ch == '\n');
+    } 
+    while (ch == '#' || ch == '\n');
     ungetc(ch, file);
 
     unsigned short width, height, max_value;
