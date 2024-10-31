@@ -21,7 +21,6 @@ unsigned short get_image_height(Image *image);
 
 #endif
 
-
 void skip_comments(FILE *file) 
 {
     int ch;
@@ -31,7 +30,6 @@ void skip_comments(FILE *file)
     }
     ungetc(ch, file); 
 }
-
 
 Image *load_image(char *filename) 
 {
@@ -46,8 +44,7 @@ Image *load_image(char *filename)
     }
 
     char format[3];
-    fscanf(file, "%2s", format);
-    if (strcmp(format, "P3") != 0) 
+    if (fscanf(file, "%2s", format) != 1 || strcmp(format, "P3") != 0) 
     {
         free(image);
         fclose(file);
@@ -56,10 +53,15 @@ Image *load_image(char *filename)
 
     skip_comments(file);
 
-    fscanf(file, "%hu %hu", &image->width, &image->height);
+    if (fscanf(file, "%hu %hu", &image->width, &image->height) != 2) 
+    {
+        free(image);
+        fclose(file);
+        return NULL;
+    }
+
     int max_value;
-    fscanf(file, "%d", &max_value);
-    if (max_value != 255) 
+    if (fscanf(file, "%d", &max_value) != 1 || max_value != 255) 
     {
         free(image);
         fclose(file);
@@ -67,15 +69,37 @@ Image *load_image(char *filename)
     }
 
     image->pixels = malloc(image->height * sizeof(unsigned char *));
+    if (!image->pixels) 
+    {
+        free(image);
+        fclose(file);
+        return NULL;
+    }
+
     for (int i = 0; i < image->height; i++) 
     {
         image->pixels[i] = malloc(image->width * sizeof(unsigned char));
+        if (!image->pixels[i]) 
+        {
+            for (int k = 0; k < i; k++) free(image->pixels[k]);
+            free(image->pixels);
+            free(image);
+            fclose(file);
+            return NULL;
+        }
+
         for (int j = 0; j < image->width; j++) 
         {
             int pixel_value;
-            fscanf(file, "%d", &pixel_value);
+            if (fscanf(file, "%d", &pixel_value) != 1) 
+            {
+                for (int k = 0; k <= i; k++) free(image->pixels[k]);
+                free(image->pixels);
+                free(image);
+                fclose(file);
+                return NULL;
+            }
             image->pixels[i][j] = (unsigned char) pixel_value;
-            fscanf(file, "%*d %*d"); 
         }
     }
 
@@ -96,7 +120,6 @@ void delete_image(Image *image)
     }
 }
 
-
 unsigned char get_image_intensity(Image *image, unsigned int row, unsigned int col)
 {
     if (row >= image->height || col >= image->width) 
@@ -116,6 +139,8 @@ unsigned short get_image_height(Image *image)
 {
     return image->height;
 }
+
+
 unsigned int hide_message(char *message, char *input_filename, char *output_filename) 
 {
     (void)message;
