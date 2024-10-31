@@ -7,19 +7,31 @@
 Image *load_image(char *filename)
 {
     FILE *file = fopen(filename, "r");
-    if (!file) return NULL;
+    if (!file) 
+    {
+        ERROR("Failed to open file: %s", filename);
+        return NULL;
+    }
 
     char format[3];
     if (fscanf(file, "%2s", format) != 1 || strcmp(format, "P3") != 0)
     {
+        ERROR("Incorrect or unsupported format: %s", format);
         fclose(file);
         return NULL;
     }
 
-    unsigned short width, height;
-    unsigned short max_value;
+    unsigned short width, height, max_value;
     if (fscanf(file, "%hu %hu %hu", &width, &height, &max_value) != 3)
     {
+        ERROR("Failed to read width, height, or max_value.");
+        fclose(file);
+        return NULL;
+    }
+
+    if (max_value != 255)
+    {
+        ERROR("Unsupported max color value: %hu", max_value);
         fclose(file);
         return NULL;
     }
@@ -27,40 +39,53 @@ Image *load_image(char *filename)
     Image *image = (Image *)malloc(sizeof(Image));
     if (!image)
     {
+        ERROR("Memory allocation for image structure failed.");
         fclose(file);
         return NULL;
     }
+
     image->width = width;
     image->height = height;
-    image->data = (unsigned char *)malloc(width * height);
+    image->data = (unsigned char *)malloc(3 * width * height);  
     if (!image->data)
     {
+        ERROR("Memory allocation for image data failed.");
         free(image);
         fclose(file);
         return NULL;
     }
 
-    unsigned int intensity;
+    unsigned int r, g, b;
     unsigned int pixel_count = 0;
 
     while (pixel_count < width * height)
     {
-        if (fscanf(file, "%u", &intensity) == 1)
+        int read = fscanf(file, "%u %u %u", &r, &g, &b);
+        if (read == 3)
         {
-            image->data[pixel_count++] = (unsigned char)intensity;
+            image->data[pixel_count * 3] = (unsigned char)r;
+            image->data[pixel_count * 3 + 1] = (unsigned char)g;
+            image->data[pixel_count * 3 + 2] = (unsigned char)b;
+            pixel_count++;
         }
         else
         {
             char c;
-            while ((c = fgetc(file)) != '\n' && c != EOF)
-            {
-                if (c == '#')
-                {
+            do {
+                c = fgetc(file);
+                if (c == '#') 
                     while (fgetc(file) != '\n' && !feof(file));
-                    break;
-                }
-            }
+            } while (c != '\n' && c != EOF);
         }
+    }
+
+    if (pixel_count != width * height)
+    {
+        ERROR("Mismatch in pixel data count. Expected %d, got %d", width * height, pixel_count);
+        free(image->data);
+        free(image);
+        fclose(file);
+        return NULL;
     }
 
     fclose(file);
