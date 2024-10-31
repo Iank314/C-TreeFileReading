@@ -19,7 +19,7 @@ unsigned char get_image_intensity(Image *image, unsigned int row, unsigned int c
 unsigned short get_image_width(Image *image);
 unsigned short get_image_height(Image *image);
 
-#endif // IMAGE_H
+#endif 
 
 void skip_comments(FILE *file) 
 {
@@ -90,8 +90,8 @@ Image *load_image(char *filename)
 
         for (int j = 0; j < image->width; j++) 
         {
-            int pixel_value;
-            if (fscanf(file, "%d", &pixel_value) != 1) 
+            int r, g, b;
+            if (fscanf(file, "%d %d %d", &r, &g, &b) != 3) 
             {
                 for (int k = 0; k <= i; k++) free(image->pixels[k]);
                 free(image->pixels);
@@ -99,7 +99,7 @@ Image *load_image(char *filename)
                 fclose(file);
                 return NULL;
             }
-            image->pixels[i][j] = (unsigned char) pixel_value;
+            image->pixels[i][j] = (unsigned char) ((r + g + b) / 3); // Grayscale intensity
         }
     }
 
@@ -138,7 +138,6 @@ unsigned short get_image_height(Image *image)
 {
     return image->height;
 }
-
 unsigned int hide_message(char *message, char *input_filename, char *output_filename) 
 {
     (void)message;
@@ -165,4 +164,4 @@ void reveal_image(char *input_filename, char *output_filename)
 {
     (void)input_filename;
     (void)output_filename;
-}
+} 
