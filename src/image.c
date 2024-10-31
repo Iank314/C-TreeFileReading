@@ -5,7 +5,7 @@ Image *load_image(char *filename)
 {
     FILE *file = fopen(filename, "r");
     if (!file) return NULL;
-    
+
     char format[3];
     fscanf(file, "%2s", format);
     if (strcmp(format, "P3") != 0) 
@@ -16,7 +16,7 @@ Image *load_image(char *filename)
 
     unsigned short width, height, max_value;
     fscanf(file, "%hu %hu %hu", &width, &height, &max_value);
-    
+
     Image *image = (Image *)malloc(sizeof(Image));
     if (!image) 
     {
@@ -36,10 +36,10 @@ Image *load_image(char *filename)
     for (unsigned int i = 0; i < width * height; i++)
     {
         unsigned int intensity;
-        fscanf(file, "%u %*u %*u", &intensity);
+        fscanf(file, "%u", &intensity);
         image->data[i] = (unsigned char)intensity;
     }
-    
+
     fclose(file);
     return image;
 }
