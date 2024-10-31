@@ -1,7 +1,7 @@
 #include "image.h"
 #include <string.h>
 
-Image *load_image(char *filename) 
+Image *load_image(char *filename)
 {
     FILE *file = fopen(filename, "r");
     if (!file) return NULL;
@@ -14,8 +14,8 @@ Image *load_image(char *filename)
         return NULL;
     }
 
-    unsigned short width, height, max_value;
-    fscanf(file, "%hu %hu %hu", &width, &height, &max_value);
+    unsigned short width, height;
+    fscanf(file, "%hu %hu", &width, &height);
 
     Image *image = (Image *)malloc(sizeof(Image));
     if (!image) 
@@ -25,7 +25,7 @@ Image *load_image(char *filename)
     }
     image->width = width;
     image->height = height;
-    image->data = (unsigned char *)malloc(width * height * 3);
+    image->data = (unsigned char *)malloc(width * height);
     if (!image->data) 
     {
         free(image);
@@ -33,30 +33,28 @@ Image *load_image(char *filename)
         return NULL;
     }
 
-    unsigned int r, g, b;
-    unsigned int pixel_count = width * height;
-    for (unsigned int i = 0; i < pixel_count; i++) 
+    unsigned int intensity;
+    for (unsigned int i = 0; i < width * height; )
     {
-        while (fscanf(file, "%u", &r) != 1) 
+        while (fscanf(file, "%u", &intensity) != 1)
         {
-            while (fgetc(file) != '\n'); //
+            char c;
+            while ((c = fgetc(file)) != '\n' && c != EOF) 
+            {
+                if (c == '#') 
+                {
+                    while (fgetc(file) != '\n' && !feof(file));
+                    break;
+                }
+            }
         }
-        while (fscanf(file, "%u", &g) != 1) 
-        {
-            while (fgetc(file) != '\n');
-        }
-        while (fscanf(file, "%u", &b) != 1) 
-        {
-            while (fgetc(file) != '\n');
-        }
-        image->data[i * 3] = (unsigned char)r;
-        image->data[i * 3 + 1] = (unsigned char)g;
-        image->data[i * 3 + 2] = (unsigned char)b;
+        image->data[i++] = (unsigned char)intensity;
     }
 
     fclose(file);
     return image;
 }
+
 void delete_image(Image *image)
 {
     if (image) 
