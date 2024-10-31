@@ -1,11 +1,11 @@
 #include "image.h"
 #include <string.h>
 
-Image *load_image(char *filename)
+Image *load_image(char *filename) 
 {
     FILE *file = fopen(filename, "r");
     if (!file) return NULL;
-    
+
     char format[3];
     fscanf(file, "%2s", format);
     if (strcmp(format, "P3") != 0) 
@@ -16,7 +16,7 @@ Image *load_image(char *filename)
 
     unsigned short width, height, max_value;
     fscanf(file, "%hu %hu %hu", &width, &height, &max_value);
-    
+
     Image *image = (Image *)malloc(sizeof(Image));
     if (!image) 
     {
@@ -25,7 +25,7 @@ Image *load_image(char *filename)
     }
     image->width = width;
     image->height = height;
-    image->data = (unsigned char *)malloc(width * height);
+    image->data = (unsigned char *)malloc(width * height * 3);
     if (!image->data) 
     {
         free(image);
@@ -33,17 +33,30 @@ Image *load_image(char *filename)
         return NULL;
     }
 
-    for (unsigned int i = 0; i < width * height; i++)
+    unsigned int r, g, b;
+    unsigned int pixel_count = width * height;
+    for (unsigned int i = 0; i < pixel_count; i++) 
     {
-        unsigned int intensity;
-        fscanf(file, "%u %*u %*u", &intensity);
-        image->data[i] = (unsigned char)intensity;
+        while (fscanf(file, "%u", &r) != 1) 
+        {
+            while (fgetc(file) != '\n'); //
+        }
+        while (fscanf(file, "%u", &g) != 1) 
+        {
+            while (fgetc(file) != '\n');
+        }
+        while (fscanf(file, "%u", &b) != 1) 
+        {
+            while (fgetc(file) != '\n');
+        }
+        image->data[i * 3] = (unsigned char)r;
+        image->data[i * 3 + 1] = (unsigned char)g;
+        image->data[i * 3 + 2] = (unsigned char)b;
     }
-    
+
     fclose(file);
     return image;
 }
-
 void delete_image(Image *image)
 {
     if (image) 
