@@ -1,7 +1,7 @@
 #include "qtree.h"
 #include <math.h>
 
-QTNode *new_node(unsigned char intensity, int is_leaf) 
+static QTNode *new_node(unsigned char intensity, int is_leaf) 
 {
     QTNode *node = (QTNode *)malloc(sizeof(QTNode));
     if (!node) return NULL;
@@ -14,31 +14,38 @@ QTNode *new_node(unsigned char intensity, int is_leaf)
 static double calculate_rmse(Image *image, int x, int y, int width, int height, unsigned char avg_intensity) 
 {
     double sum_squared_diff = 0;
+    int count = 0;
     for (int row = y; row < y + height; row++) 
     {
         for (int col = x; col < x + width; col++) 
         {
             unsigned char intensity = get_image_intensity(image, row, col);
-            sum_squared_diff += pow(intensity - avg_intensity, 2);
+            sum_squared_diff += (intensity - avg_intensity) * (intensity - avg_intensity);
+            count++;
         }
     }
-    return sqrt(sum_squared_diff / (width * height));
+    return sqrt(sum_squared_diff / count);
 }
 
 static unsigned char calculate_average_intensity(Image *image, int x, int y, int width, int height) 
 {
     int sum = 0;
+    int count = 0;
     for (int row = y; row < y + height; row++) 
     {
         for (int col = x; col < x + width; col++) 
         {
             sum += get_image_intensity(image, row, col);
+            count++;
         }
     }
-    return (unsigned char)(sum / (width * height));
+    return (unsigned char)(sum / count);
 }
+
 QTNode *create_quadtree_helper(Image *image, int x, int y, int width, int height, double max_rmse) 
 {
+    if (width <= 0 || height <= 0) return NULL;
+
     unsigned char avg_intensity = calculate_average_intensity(image, x, y, width, height);
     double rmse = calculate_rmse(image, x, y, width, height, avg_intensity);
 
@@ -64,7 +71,6 @@ QTNode *create_quadtree(Image *image, double max_rmse)
 {
     return create_quadtree_helper(image, 0, 0, image->width, image->height, max_rmse);
 }
-
 QTNode *get_child1(QTNode *node) 
 {
     return node ? node->children[0] : NULL;
