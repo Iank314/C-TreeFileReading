@@ -132,19 +132,56 @@ void delete_quadtree(QTNode *root)
     free(root);
 }
 
-void save_qtree_as_ppm(QTNode *root, char *filename) 
+void save_preorder_qt(QTNode *root, char *filename)
 {
-    (void)root;
-    (void)filename;
+    FILE *file = fopen(filename, "w");
+    if (!file) return;
+
+    if (root) 
+    {
+        fprintf(file, "%d %d\n", root->intensity, root->is_leaf);
+        for (int i = 0; i < 4; i++) 
+        {
+            save_preorder_qt(root->children[i], filename);
+        }
+    } 
+    else 
+    {
+        fprintf(file, "-1 -1\n"); // marker for NULL nodes
+    }
+
+    fclose(file);
+}
+
+QTNode *load_preorder_qt_helper(FILE *file)
+{
+    int intensity, is_leaf;
+    if (fscanf(file, "%d %d", &intensity, &is_leaf) != 2 || intensity == -1) 
+    {
+        return NULL;
+    }
+
+    QTNode *node = new_node((unsigned char)intensity, is_leaf);
+    if (!is_leaf) 
+    {
+        for (int i = 0; i < 4; i++) 
+        {
+            node->children[i] = load_preorder_qt_helper(file);
+        }
+    }
+    return node;
 }
 
 QTNode *load_preorder_qt(char *filename) 
 {
-    (void)filename;
-    return NULL;
-}
+    FILE *file = fopen(filename, "r");
+    if (!file) return NULL;
 
-void save_preorder_qt(QTNode *root, char *filename)
+    QTNode *root = load_preorder_qt_helper(file);
+    fclose(file);
+    return root;
+}
+void save_qtree_as_ppm(QTNode *root, char *filename) 
 {
     (void)root;
     (void)filename;
