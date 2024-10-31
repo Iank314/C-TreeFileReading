@@ -17,8 +17,21 @@ Image *load_image(char *filename)
         return NULL;
     }
 
+    int ch;
+    do {
+        ch = fgetc(file);
+        if (ch == '#') while (fgetc(file) != '\n');
+    } while (ch == '#' || ch == '\n');
+    ungetc(ch, file);
+
     unsigned short width, height, max_value;
     if (fscanf(file, "%hu %hu %hu", &width, &height, &max_value) != 3)
+    {
+        fclose(file);
+        return NULL;
+    }
+
+    if (max_value != 255)
     {
         fclose(file);
         return NULL;
@@ -32,7 +45,7 @@ Image *load_image(char *filename)
     }
     image->width = width;
     image->height = height;
-    image->data = (unsigned char *)malloc(3 * width * height);  
+    image->data = (unsigned char *)malloc(3 * width * height);
     if (!image->data)
     {
         free(image);
@@ -45,19 +58,16 @@ Image *load_image(char *filename)
 
     for (unsigned int i = 0; i < width * height; i++)
     {
-        if (fscanf(file, "%u %u %u", &r, &g, &b) == 3)
-        {
-            image->data[pixel_count++] = (unsigned char)r;
-            image->data[pixel_count++] = (unsigned char)g;
-            image->data[pixel_count++] = (unsigned char)b;
-        }
-        else
+        if (fscanf(file, "%u %u %u", &r, &g, &b) != 3)
         {
             free(image->data);
             free(image);
             fclose(file);
-            return NULL;  
+            return NULL;
         }
+        image->data[pixel_count++] = (unsigned char)r;
+        image->data[pixel_count++] = (unsigned char)g;
+        image->data[pixel_count++] = (unsigned char)b;
     }
 
     fclose(file);
@@ -76,7 +86,7 @@ void delete_image(Image *image)
 unsigned char get_image_intensity(Image *image, unsigned int row, unsigned int col)
 {
     if (!image || row >= image->height || col >= image->width) return 0;
-    return image->data[(row * image->width + col) * 3];  
+    return image->data[(row * image->width + col) * 3];
 }
 
 unsigned short get_image_width(Image *image)
@@ -88,7 +98,6 @@ unsigned short get_image_height(Image *image)
 {
     return image ? image->height : 0;
 }
-
 unsigned int hide_message(char *message, char *input_filename, char *output_filename)
 {
    (void)message;
