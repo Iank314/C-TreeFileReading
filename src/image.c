@@ -17,11 +17,11 @@ Image *load_image(char *filename)
     }
 
     unsigned short width, height;
-    unsigned short max_value; 
+    unsigned short max_value;
     if (fscanf(file, "%hu %hu %hu", &width, &height, &max_value) != 3)
     {
         fclose(file);
-        return NULL; 
+        return NULL;
     }
 
     Image *image = (Image *)malloc(sizeof(Image));
@@ -66,6 +66,7 @@ Image *load_image(char *filename)
     fclose(file);
     return image;
 }
+
 void delete_image(Image *image)
 {
     if (image)
