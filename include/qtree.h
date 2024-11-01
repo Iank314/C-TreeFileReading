@@ -21,8 +21,8 @@ QTNode *get_child3(QTNode *node);
 QTNode *get_child4(QTNode *node);
 unsigned char get_node_intensity(QTNode *node);
 void delete_quadtree(QTNode *root);
-void save_qtree_as_ppm(QTNode *root, char *filename);
 QTNode *load_preorder_qt(char *filename);
 void save_preorder_qt(QTNode *root, char *filename);
+void save_qtree_as_ppm(QTNode *root, char *filename);
 
 #endif // QTREE_H
