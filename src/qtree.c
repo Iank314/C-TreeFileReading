@@ -184,9 +184,52 @@ void save_qtree_as_ppm(QTNode *root, char *filename)
     fclose(file);
 }
 
-QTNode *load_preorder_qt(char *filename) {
-    (void)filename;
-    return NULL;
+static QTNode *load_preorder_qt_helper(FILE *file) 
+{
+    char node_type;
+    int intensity, row, height, col, width;
+
+    if (fscanf(file, " %c %d %d %d %d %d", &node_type, &intensity, &row, &height, &col, &width) != 6) 
+    {
+        return NULL;  // End of file or error
+    }
+
+    QTNode *node = (QTNode *)malloc(sizeof(QTNode));
+    if (!node) 
+    {
+        ERROR("Memory allocation failed for QTNode.");
+        return NULL;
+    }
+    node->intensity = (unsigned char)intensity;
+
+    if (node_type == 'L') 
+    {
+        node->is_leaf = 1;
+        node->children[0] = node->children[1] = node->children[2] = node->children[3] = NULL;
+    } 
+    else if (node_type == 'N') 
+    {
+
+        node->is_leaf = 0;
+        node->children[0] = load_preorder_qt_helper(file);
+        node->children[1] = load_preorder_qt_helper(file);
+        node->children[2] = load_preorder_qt_helper(file);
+        node->children[3] = load_preorder_qt_helper(file);
+    }
+    return node;
+}
+
+QTNode *load_preorder_qt(char *filename) 
+{
+    FILE *file = fopen(filename, "r");
+    if (!file) {
+        ERROR("Failed to open file for reading.");
+        return NULL;
+    }
+
+    QTNode *root = load_preorder_qt_helper(file);
+    fclose(file);
+    return root;
 }
 
 
