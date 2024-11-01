@@ -184,16 +184,15 @@ void save_qtree_as_ppm(QTNode *root, char *filename)
     fclose(file);
 }
 
-static QTNode *load_preorder_qt_helper(FILE *file) 
+static QTNode *load_preorder_qt_helper(FILE *file)  
 {
     char node_type;
     int intensity, row, height, col, width;
 
     if (fscanf(file, " %c %d %d %d %d %d", &node_type, &intensity, &row, &height, &col, &width) != 6) 
     {
-        return NULL;  // End of file or error
+        return NULL; 
     }
-
     QTNode *node = (QTNode *)malloc(sizeof(QTNode));
     if (!node) 
     {
@@ -209,13 +208,29 @@ static QTNode *load_preorder_qt_helper(FILE *file)
     } 
     else if (node_type == 'N') 
     {
-
         node->is_leaf = 0;
         node->children[0] = load_preorder_qt_helper(file);
         node->children[1] = load_preorder_qt_helper(file);
         node->children[2] = load_preorder_qt_helper(file);
         node->children[3] = load_preorder_qt_helper(file);
+
+        for (int i = 0; i < 4; i++) 
+        {
+            if (node->children[i] == NULL) 
+            {
+                for (int j = 0; j < i; j++) free(node->children[j]);
+                free(node);
+                return NULL;
+            }
+        }
+    } 
+    else 
+    {
+        ERROR("Invalid node type in file.");
+        free(node);
+        return NULL;
     }
+
     return node;
 }
 
@@ -231,7 +246,6 @@ QTNode *load_preorder_qt(char *filename)
     fclose(file);
     return root;
 }
-
 
 void save_preorder_qt(QTNode *root, char *filename) {
     (void)root;
