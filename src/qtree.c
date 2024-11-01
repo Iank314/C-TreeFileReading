@@ -1,21 +1,16 @@
+
 #include "qtree.h"
 #include "image.h"
 #include <math.h>
 #include <stdlib.h>
-#include <stdio.h> 
 
 QTNode *create_quadtree_helper(Image *image, int row, int col, int width, int height, double max_rmse) 
 {
     QTNode *node = (QTNode *)malloc(sizeof(QTNode));
     if (!node)
-    {
-        fprintf(stderr, "Memory allocation failed for QTNode.\n");
+     {
+        ERROR("Memory allocation failed for QTNode.");
         return NULL;
-    }
-
-    for (int i = 0; i < 4; i++) 
-    {
-        node->children[i] = NULL;
     }
 
     double total_intensity = 0;
@@ -47,15 +42,19 @@ QTNode *create_quadtree_helper(Image *image, int row, int col, int width, int he
         int half_height = height / 2;
 
         node->children[0] = create_quadtree_helper(image, row, col, half_width, half_height, max_rmse);
-        node->children[1] = (width > 1) ? create_quadtree_helper(image, row, col + half_width, width - half_width, half_height, max_rmse) : NULL;
-        node->children[2] = (height > 1) ? create_quadtree_helper(image, row + half_height, col, half_width, height - half_height, max_rmse) : NULL;
-        node->children[3] = (width > 1 && height > 1) ? create_quadtree_helper(image, row + half_height, col + half_width, width - half_width, height - half_height, max_rmse) : NULL;
+        node->children[1] = create_quadtree_helper(image, row, col + half_width, width - half_width, half_height, max_rmse);
+        node->children[2] = create_quadtree_helper(image, row + half_height, col, half_width, height - half_height, max_rmse);
+        node->children[3] = create_quadtree_helper(image, row + half_height, col + half_width, width - half_width, height - half_height, max_rmse);
 
         node->is_leaf = 0;
     } 
     else 
     {
         node->is_leaf = 1;
+        for (int i = 0; i < 4; i++) 
+        {
+            node->children[i] = NULL;
+        }
     }
     return node;
 }
@@ -65,6 +64,11 @@ QTNode *create_quadtree(Image *image, double max_rmse)
     int width = get_image_width(image);
     int height = get_image_height(image);
     QTNode *root = create_quadtree_helper(image, 0, 0, width, height, max_rmse);
+    if (root) 
+    {
+        root->width = width;
+        root->height = height;
+    }
     return root;
 }
 
