@@ -266,21 +266,20 @@ void fill_region(unsigned char *buffer, unsigned char intensity, int start_row, 
     }
 }
 
+
 void save_qtree_as_ppm_helper(QTNode *node, FILE *fp)
 {
     if (!node)
+    {
         return;
-
-    if (!node->children[0] && !node->children[1] && 
-        !node->children[2] && !node->children[3])
+    }
+    if (!node->children[0] && !node->children[1] && !node->children[2] && !node->children[3])
     {
         unsigned int i = 0;
-        unsigned int node_height = node->height; 
-        while (i < node_height)
+        while (i < (unsigned int)node->height)
         {
             unsigned int j = 0;
-            unsigned int node_width = node->width;  
-            while (j < node_width)
+            while (j < (unsigned int)node->width)
             {
                 fprintf(fp, "%hu %hu %hu ", node->intensity, node->intensity, node->intensity);
                 j++;
@@ -291,27 +290,34 @@ void save_qtree_as_ppm_helper(QTNode *node, FILE *fp)
     }
     else
     {
-        if (node->children[0]) save_qtree_as_ppm_helper(node->children[0], fp);
-        if (node->children[1]) save_qtree_as_ppm_helper(node->children[1], fp);
-        if (node->children[2]) save_qtree_as_ppm_helper(node->children[2], fp);
-        if (node->children[3]) save_qtree_as_ppm_helper(node->children[3], fp);
+        for (int i = 0; i < 4; i++)
+        {
+            if (node->children[i])
+            {
+                save_qtree_as_ppm_helper(node->children[i], fp);
+            }
+        }
     }
 }
 
 void save_qtree_as_ppm(QTNode *root, char *filename)
 {
-    FILE *file = fopen(filename, "w");
-    if (!file)
+    FILE *file;
+    
+    file = fopen(filename, "w");
+    if (file == NULL)
     {
-        ERROR("Failed to open file for writing.");
         return;
     }
-    
-    fprintf(file, "P3\n%hu %hu\n255\n", root->width, root->height);
+
+    fprintf(file, "P3\n");
+    fprintf(file, "%hu %hu\n", root->width, root->height);
+    fprintf(file, "255\n");
 
     save_qtree_as_ppm_helper(root, file);
     fclose(file);
 }
+
 
 
 
