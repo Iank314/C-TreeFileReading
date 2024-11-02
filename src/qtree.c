@@ -114,61 +114,77 @@ unsigned char get_node_intensity(QTNode *node) { return node ? node->intensity :
 
 
 
-void fill_ppm_image(QTNode *node, unsigned char *data, int x, int y, int width, int height, int image_width)
+
+void fill_region(unsigned char *buffer, unsigned char intensity, int row, int col, int width, int height, int image_width)
 {
-    if (node->is_leaf) 
+    for (int i = row; i < row + height; i++) 
     {
-        for (int i = y; i < y + height; i++) 
+        for (int j = col; j < col + width; j++) 
         {
-            for (int j = x; j < x + width; j++) 
-            {
-                int index = (i * image_width + j) * 3;
-                data[index] = data[index + 1] = data[index + 2] = node->intensity;
-            }
+            int index = (i * image_width + j) * 3;
+            buffer[index] = buffer[index + 1] = buffer[index + 2] = intensity;
         }
-        return;
     }
-
-    int half_width = width / 2;
-    int half_height = height / 2;
-
-    fill_ppm_image(node->children[0], data, x, y, half_width, half_height, image_width);
-    fill_ppm_image(node->children[1], data, x + half_width, y, width - half_width, half_height, image_width);
-    fill_ppm_image(node->children[2], data, x, y + half_height, half_width, height - half_height, image_width);
-    fill_ppm_image(node->children[3], data, x + half_width, y + half_height, width - half_width, height - half_height, image_width);
 }
+static void save_ppm_helper(QTNode *node, unsigned char *buffer, int row, int col, int width, int height, int image_width)
+{
+    if (!node)
+        return;
 
+    if (node->is_leaf)
+    {
+        fill_region(buffer, node->intensity, row, col, width, height, image_width);
+    }
+    else
+    {
+        int half_width = (width + 1) / 2;
+        int half_height = (height + 1) / 2;
+
+        save_ppm_helper(node->children[0], buffer, row, col, half_width, half_height, image_width);
+        save_ppm_helper(node->children[1], buffer, row, col + half_width, width - half_width, half_height, image_width);
+        save_ppm_helper(node->children[2], buffer, row + half_height, col, half_width, height - half_height, image_width);
+        save_ppm_helper(node->children[3], buffer, row + half_height, col + half_width, width - half_width, height - half_height, image_width);
+    }
+}
 void save_qtree_as_ppm(QTNode *root, char *filename)
 {
+    if (!root || !filename) {
+        ERROR("Invalid root or filename in save_qtree_as_ppm.");
+        return;
+    }
+
+    int image_width = root->width;
+    int image_height = root->height;
+
     FILE *file = fopen(filename, "w");
-    if (!file) 
+    if (!file)
     {
-        ERROR("Failed to open file for writing PPM");
+        ERROR("Failed to open file for writing PPM.");
         return;
     }
 
-    fprintf(file, "P3\n%d %d\n255\n", root->width, root->height);
-
-    unsigned char *data = (unsigned char *)calloc(root->width * root->height * 3, sizeof(unsigned char));
-    if (!data) 
+    fprintf(file, "P3\n%d %d\n255\n", image_width, image_height);
+    unsigned char *buffer = (unsigned char *)calloc(image_width * image_height * 3, sizeof(unsigned char));
+    if (!buffer)
     {
+        ERROR("Memory allocation failed for image buffer.");
         fclose(file);
-        ERROR("Failed to allocate memory for PPM data");
         return;
     }
 
-    fill_ppm_image(root, data, 0, 0, root->width, root->height, root->width);
+    save_ppm_helper(root, buffer, 0, 0, image_width, image_height, image_width);
 
-    for (int i = 0; i < root->height; i++) 
+    for (int i = 0; i < image_height; i++) 
     {
-        for (int j = 0; j < root->width; j++) 
+        for (int j = 0; j < image_width; j++) 
         {
-            int index = (i * root->width + j) * 3;
-            fprintf(file, "%d %d %d\n", data[index], data[index + 1], data[index + 2]);
+            int index = (i * image_width + j) * 3;
+            fprintf(file, "%d %d %d ", buffer[index], buffer[index + 1], buffer[index + 2]);
         }
+        fprintf(file, "\n");
     }
 
-    free(data);
+    free(buffer);
     fclose(file);
 }
 
