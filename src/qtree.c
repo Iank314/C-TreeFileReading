@@ -8,7 +8,7 @@ QTNode *create_quadtree_helper(Image *image, int row, int col, int width, int he
 {
     QTNode *node = (QTNode *)malloc(sizeof(QTNode));
     if (!node)
-     {
+    {
         ERROR("Memory allocation failed for QTNode.");
         return NULL;
     }
@@ -38,8 +38,8 @@ QTNode *create_quadtree_helper(Image *image, int row, int col, int width, int he
 
     if (rmse > max_rmse && width > 1 && height > 1) 
     {
-        int half_width = width / 2;
-        int half_height = height / 2;
+        int half_width = (width + 1) / 2;
+        int half_height = (height + 1) / 2;
 
         node->children[0] = create_quadtree_helper(image, row, col, half_width, half_height, max_rmse);
         node->children[1] = create_quadtree_helper(image, row, col + half_width, width - half_width, half_height, max_rmse);
