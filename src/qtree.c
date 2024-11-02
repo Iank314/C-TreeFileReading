@@ -111,7 +111,6 @@ QTNode *get_child4(QTNode *node) { return node ? node->children[3] : NULL; }
 
 unsigned char get_node_intensity(QTNode *node) { return node ? node->intensity : 0; }
 
-
 static QTNode *load_preorder_qt_helper(FILE *file)
 {
     char node_type;
@@ -128,7 +127,10 @@ static QTNode *load_preorder_qt_helper(FILE *file)
         ERROR("Memory allocation failed for QTNode.");
         return NULL;
     }
+
     node->intensity = (unsigned char)intensity;
+    node->width = width;
+    node->height = height;
 
     if (node_type == 'L')
     {
@@ -139,30 +141,49 @@ static QTNode *load_preorder_qt_helper(FILE *file)
     {
         node->is_leaf = 0;
 
+        for (int i = 0; i < 4; i++) node->children[i] = NULL;
+
         if (width > 1 && height > 1)
         {
-            node->children[0] = load_preorder_qt_helper(file);
-            node->children[1] = load_preorder_qt_helper(file);
-            node->children[2] = load_preorder_qt_helper(file);
-            node->children[3] = load_preorder_qt_helper(file);
+            for (int i = 0; i < 4; i++) 
+            {
+                node->children[i] = load_preorder_qt_helper(file);
+                if (!node->children[i]) 
+                {
+                    for (int j = 0; j < i; j++) free(node->children[j]);
+                    free(node);
+                    return NULL;
+                }
+            }
         }
         else if (width > 1)
         {
-            node->children[0] = load_preorder_qt_helper(file);
-            node->children[1] = load_preorder_qt_helper(file);
-            node->children[2] = NULL;
-            node->children[3] = NULL;
+            for (int i = 0; i < 2; i++) 
+            {
+                node->children[i] = load_preorder_qt_helper(file);
+                if (!node->children[i]) 
+                {
+                    for (int j = 0; j < i; j++) free(node->children[j]);
+                    free(node);
+                    return NULL;
+                }
+            }
         }
         else if (height > 1)
         {
             node->children[0] = load_preorder_qt_helper(file);
-            node->children[1] = NULL;
+            if (!node->children[0]) 
+            {
+                free(node);
+                return NULL;
+            }
             node->children[2] = load_preorder_qt_helper(file);
-            node->children[3] = NULL;
-        }
-        else
-        {
-            for (int i = 0; i < 4; i++) node->children[i] = NULL;
+            if (!node->children[2]) 
+            {
+                free(node->children[0]);
+                free(node);
+                return NULL;
+            }
         }
     }
     return node;
@@ -177,6 +198,9 @@ QTNode *load_preorder_qt(char *filename)
     }
     QTNode *root = load_preorder_qt_helper(file);
     fclose(file);
+    if (!root) {
+        ERROR("Failed to load quadtree from file.");
+    }
     return root;
 }
 
