@@ -139,21 +139,17 @@ static QTNode *load_preorder_qt_helper(FILE *file)
     } 
     else if (node_type == 'N') 
     {
-        node->is_leaf = 0;
-        node->children[0] = load_preorder_qt_helper(file);
-        node->children[1] = load_preorder_qt_helper(file);
-        node->children[2] = load_preorder_qt_helper(file);
-        node->children[3] = load_preorder_qt_helper(file);
 
+        node->is_leaf = 0;
+        node->children[0] = load_preorder_qt_helper(file);  
+        node->children[1] = load_preorder_qt_helper(file);  
+        node->children[2] = load_preorder_qt_helper(file);  
+        node->children[3] = load_preorder_qt_helper(file);  
         for (int i = 0; i < 4; i++) 
         {
             if (node->children[i] == NULL) 
             {
-                for (int j = 0; j < 4; j++) 
-                {
-                    if (node->children[j] != NULL) free(node->children[j]);
-                }
-                free(node);
+                delete_quadtree(node); 
                 return NULL;
             }
         }
@@ -174,6 +170,7 @@ QTNode *load_preorder_qt(char *filename)
     fclose(file);
     return root;
 }
+
 static void save_preorder_qt_helper(QTNode *node, FILE *file, int row, int col, int width, int height) 
 {
     if (!node) return;
