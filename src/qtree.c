@@ -227,8 +227,7 @@ void fill_region(unsigned char *buffer, unsigned char intensity, int start_row, 
 
 static void save_ppm_helper(QTNode *node, unsigned char *buffer, int row, int col, int width, int height, int image_width)
 {
-    if (!node)
-        return;
+    if (!node) return;
 
     if (node->is_leaf) 
     {
@@ -239,10 +238,10 @@ static void save_ppm_helper(QTNode *node, unsigned char *buffer, int row, int co
         int half_width = width / 2;
         int half_height = height / 2;
 
-        save_ppm_helper(node->children[0], buffer, row, col, half_width, half_height, image_width);
-        save_ppm_helper(node->children[1], buffer, row, col + half_width, width - half_width, half_height, image_width);
-        save_ppm_helper(node->children[2], buffer, row + half_height, col, half_width, height - half_height, image_width);
-        save_ppm_helper(node->children[3], buffer, row + half_height, col + half_width, width - half_width, height - half_height, image_width);
+        save_ppm_helper(node->children[0], buffer, row, col, half_width, half_height, image_width);                  // Child 1
+        save_ppm_helper(node->children[1], buffer, row, col + half_width, width - half_width, half_height, image_width); // Child 2
+        save_ppm_helper(node->children[2], buffer, row + half_height, col, half_width, height - half_height, image_width); // Child 3
+        save_ppm_helper(node->children[3], buffer, row + half_height, col + half_width, width - half_width, height - half_height, image_width); // Child 4
     }
 }
 
@@ -273,7 +272,7 @@ void save_qtree_as_ppm(QTNode *root, char *filename)
         fclose(file);
         return;
     }
-    memset(buffer, 0, image_width * image_height * 3);  
+    memset(buffer, 0, image_width * image_height * 3); 
 
     save_ppm_helper(root, buffer, 0, 0, image_width, image_height, image_width);
 
@@ -286,8 +285,6 @@ void save_qtree_as_ppm(QTNode *root, char *filename)
         }
     }
     fprintf(file, "\n");  
-
     free(buffer);
     fclose(file);
 }
-
