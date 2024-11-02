@@ -7,7 +7,7 @@
 QTNode *create_quadtree_helper(Image *image, int row, int col, int width, int height, double max_rmse) 
 {
     QTNode *node = (QTNode *)malloc(sizeof(QTNode));
-    if (!node)
+    if (!node) 
     {
         ERROR("Memory allocation failed for QTNode.");
         return NULL;
@@ -36,29 +36,26 @@ QTNode *create_quadtree_helper(Image *image, int row, int col, int width, int he
     }
     rmse = sqrt(rmse / num_pixels);
 
+    node->is_leaf = 1; 
+    for (int i = 0; i < 4; i++) 
+    {
+        node->children[i] = NULL; 
+    }
+
     if (rmse > max_rmse && width > 1 && height > 1) 
     {
-        int half_width = (width + 1) / 2;
-        int half_height = (height + 1) / 2;
+        int half_width = width / 2;
+        int half_height = height / 2;
 
         node->children[0] = create_quadtree_helper(image, row, col, half_width, half_height, max_rmse);
         node->children[1] = create_quadtree_helper(image, row, col + half_width, width - half_width, half_height, max_rmse);
         node->children[2] = create_quadtree_helper(image, row + half_height, col, half_width, height - half_height, max_rmse);
         node->children[3] = create_quadtree_helper(image, row + half_height, col + half_width, width - half_width, height - half_height, max_rmse);
-
         node->is_leaf = 0;
-    } 
-    else 
-    {
-        node->is_leaf = 1;
-        for (int i = 0; i < 4; i++) 
-        {
-            node->children[i] = NULL;
-        }
     }
+
     return node;
 }
-
 QTNode *create_quadtree(Image *image, double max_rmse) 
 {
     int width = get_image_width(image);
