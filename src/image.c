@@ -259,7 +259,8 @@ char *reveal_message(char *input_filename)
 
 void encode_dimension_bits(FILE *input_file, FILE *output_file, unsigned short dimension) 
 {
-    for (int bit_pos = 7; bit_pos >= 0; bit_pos--) {
+    for (int bit_pos = 7; bit_pos >= 0; bit_pos--) 
+    {
         unsigned int bit = (dimension >> bit_pos) & 1;
         unsigned int pixel_color;
         fscanf(input_file, "%u %*u %*u", &pixel_color);
@@ -273,7 +274,8 @@ void embed_image(FILE *secret_file, FILE *input_file, FILE *output_file)
     unsigned int secret_pixel;
     while (fscanf(secret_file, "%u %*u %*u", &secret_pixel) == 1) 
     {
-        for (int bit_pos = 7; bit_pos >= 0; bit_pos--) {
+        for (int bit_pos = 7; bit_pos >= 0; bit_pos--) 
+        {
             unsigned int bit = (secret_pixel >> bit_pos) & 1;
             unsigned int input_pixel;
             fscanf(input_file, "%u %*u %*u", &input_pixel);
