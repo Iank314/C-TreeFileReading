@@ -148,6 +148,8 @@ static void save_ppm_helper(QTNode *node, unsigned char *buffer, int row, int co
         save_ppm_helper(node->children[3], buffer, row + half_height, col + half_width, width - half_width, height - half_height, image_width); 
     }
 }
+
+
 void save_qtree_as_ppm(QTNode *root, char *filename)
 {
     if (!root || !filename) 
@@ -175,7 +177,7 @@ void save_qtree_as_ppm(QTNode *root, char *filename)
         fclose(file);
         return;
     }
-    memset(buffer, 0, image_width * image_height * 3);
+    memset(buffer, 0, image_width * image_height * 3);  
 
     save_ppm_helper(root, buffer, 0, 0, image_width, image_height, image_width);
 
@@ -192,7 +194,6 @@ void save_qtree_as_ppm(QTNode *root, char *filename)
     free(buffer);
     fclose(file);
 }
-
 
 
 
