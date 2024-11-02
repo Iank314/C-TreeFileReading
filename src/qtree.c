@@ -90,7 +90,6 @@ void delete_quadtree(QTNode *root)
         free(root);
     }
 }
-
 static QTNode *load_preorder_qt_helper(FILE *file) 
 {
     char node_type;
@@ -108,6 +107,8 @@ static QTNode *load_preorder_qt_helper(FILE *file)
         return NULL;
     }
     node->intensity = (unsigned char)intensity;
+    node->width = width;
+    node->height = height;
 
     if (node_type == 'L') 
     {
@@ -121,17 +122,31 @@ static QTNode *load_preorder_qt_helper(FILE *file)
         node->children[1] = load_preorder_qt_helper(file);
         node->children[2] = load_preorder_qt_helper(file);
         node->children[3] = load_preorder_qt_helper(file);
+
+        for (int i = 0; i < 4; i++) 
+        {
+            if (node->children[i] == NULL) 
+            {
+                for (int j = 0; j < 4; j++) 
+                {
+                    if (node->children[j] != NULL) free(node->children[j]);
+                }
+                free(node);
+                return NULL;
+            }
+        }
     }
     return node;
 }
-
 QTNode *load_preorder_qt(char *filename) 
 {
     FILE *file = fopen(filename, "r");
-    if (!file) {
+    if (!file) 
+    {
         ERROR("Failed to open file for reading.");
         return NULL;
     }
+
     QTNode *root = load_preorder_qt_helper(file);
     fclose(file);
     return root;
