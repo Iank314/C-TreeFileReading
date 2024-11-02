@@ -4,72 +4,78 @@
 #include "image.h"
 #include "qtree.h"
 
-QTNode *create_quadtree_helper(Image *image, int row, int col, int width, int height, double max_rmse) 
+double calculate_rmse(Image *image, int x, int y, int width, int height, unsigned char avg_intensity) 
+{
+    double rmse = 0.0;
+    int pixel_count = width * height;
+    for (int i = y; i < y + height; i++) 
+    {
+        for (int j = x; j < x + width; j++) 
+        {
+            unsigned char intensity = get_image_intensity(image, i, j);
+            rmse += pow(intensity - avg_intensity, 2);
+        }
+    }
+    return sqrt(rmse / pixel_count);
+}
+QTNode *create_quadtree_recursive(Image *image, int x, int y, int width, int height, double max_rmse) 
 {
     QTNode *node = (QTNode *)malloc(sizeof(QTNode));
-    if (!node) {
-        ERROR("Memory allocation failed for QTNode.");
+    if (!node) 
+    {
+        ERROR("Memory allocation failed for QTNode");
         return NULL;
     }
 
-    double total_intensity = 0.0;
-    double sum_squares = 0.0;
-    int num_pixels = width * height;
-
-    for (int i = row; i < row + height; i++) {
-        for (int j = col; j < col + width; j++) {
-            double intensity = get_image_intensity(image, i, j);
-            total_intensity += intensity;
-            sum_squares += intensity * intensity;
-        }
-    }
-
-    double avg_intensity = total_intensity / num_pixels;
-    node->intensity = (unsigned char)(avg_intensity + 0.5);
-
-    double mean_square = sum_squares / num_pixels;
-    double rmse = sqrt(mean_square - avg_intensity * avg_intensity);
-
-    node->is_leaf = 1;
-    for (int i = 0; i < 4; i++) {
-        node->children[i] = NULL;
-    }
-
-    if (rmse > max_rmse && width > 1 && height > 1) 
+    unsigned long total_intensity = 0;
+    for (int i = y; i < y + height; i++) 
     {
-        int half_width = (width + 1) / 2;
-        int half_height = (height + 1) / 2;
-
-        node->children[0] = create_quadtree_helper(image, row, col, half_width, half_height, max_rmse);
-        node->children[1] = create_quadtree_helper(image, row, col + half_width, width - half_width, half_height, max_rmse);
-        node->children[2] = create_quadtree_helper(image, row + half_height, col, half_width, height - half_height, max_rmse);
-        node->children[3] = create_quadtree_helper(image, row + half_height, col + half_width, width - half_width, height - half_height, max_rmse);
-
-        if (node->children[0] && node->children[1] && node->children[2] && node->children[3]) {
-            node->is_leaf = 0;
-        } else {
-            for (int i = 0; i < 4; i++) {
-                if (node->children[i]) delete_quadtree(node->children[i]);
-            }
-            free(node);
-            return NULL;
+        for (int j = x; j < x + width; j++) 
+        {
+            total_intensity += get_image_intensity(image, i, j);
         }
     }
+    unsigned char avg_intensity = total_intensity / (width * height);
+
+    double rmse = calculate_rmse(image, x, y, width, height, avg_intensity);
+
+    node->intensity = avg_intensity;
+    node->width = width;
+    node->height = height;
+
+    if (rmse <= max_rmse || width == 1 || height == 1) 
+    {
+        node->is_leaf = 1;
+        for (int i = 0; i < 4; i++) node->children[i] = NULL;
+        return node;
+    }
+
+    node->is_leaf = 0;
+    int half_width = width / 2;
+    int half_height = height / 2;
+
+    node->children[0] = create_quadtree_recursive(image, x, y, half_width, half_height, max_rmse);
+    node->children[1] = create_quadtree_recursive(image, x + half_width, y, half_width, half_height, max_rmse);
+    node->children[2] = create_quadtree_recursive(image, x, y + half_height, half_width, half_height, max_rmse);
+    node->children[3] = create_quadtree_recursive(image, x + half_width, y + half_height, half_width, half_height, max_rmse);
 
     return node;
 }
 
 QTNode *create_quadtree(Image *image, double max_rmse) 
 {
-    int width = get_image_width(image);
-    int height = get_image_height(image);
-    QTNode *root = create_quadtree_helper(image, 0, 0, width, height, max_rmse);
-    if (root) 
-    {
-        root->width = width;
-        root->height = height;
+    return create_quadtree_recursive(image, 0, 0, image->width, image->height, max_rmse);
+}
+
+void delete_quadtree(QTNode *root) 
+{
+    if (root == NULL) return;
+    if (!root->is_leaf) {
+        for (int i = 0; i < 4; i++) {
+            delete_quadtree(root->children[i]);
+        }
     }
-    return root;
+    free(root);
 }
 QTNode *get_child1(QTNode *node) { return node ? node->children[0] : NULL; }
 QTNode *get_child2(QTNode *node) { return node ? node->children[1] : NULL; }
@@ -78,17 +84,6 @@ QTNode *get_child4(QTNode *node) { return node ? node->children[3] : NULL; }
 
 unsigned char get_node_intensity(QTNode *node) { return node ? node->intensity : 0; }
 
-void delete_quadtree(QTNode *root) 
-{
-    if (root) 
-    {
-        for (int i = 0; i < 4; i++) 
-        {
-            delete_quadtree(root->children[i]);
-        }
-        free(root);
-    }
-}
 static QTNode *load_preorder_qt_helper(FILE *file) 
 {
     char node_type;
