@@ -280,7 +280,6 @@ void embed_image(FILE *secret_file, FILE *input_file, FILE *output_file)
         }
     }
 }
-
 unsigned int hide_image(char *secret_image_filename, char *input_filename, char *output_filename) 
 {
     FILE *secret_file = fopen(secret_image_filename, "r");
@@ -301,7 +300,7 @@ unsigned int hide_image(char *secret_image_filename, char *input_filename, char 
 
     if (!read_image_header(secret_file, secret_format, &secret_width, &secret_height, &secret_max_color) ||
         !read_image_header(input_file, input_format, &input_width, &input_height, &input_max_color)) 
-        {
+    {
         fclose(secret_file);
         fclose(input_file);
         fclose(output_file);
@@ -315,14 +314,18 @@ unsigned int hide_image(char *secret_image_filename, char *input_filename, char 
         fclose(secret_file);
         fclose(input_file);
         fclose(output_file);
+        printf("Image is not allowed to be hidden!\n");
         return 0;
     }
 
     fprintf(output_file, "%s\n%hu %hu\n%u\n", "P3", input_width, input_height, 255);
-    encode_dimension_bits(input_file, output_file, secret_height);
+
     encode_dimension_bits(input_file, output_file, secret_width);
+    encode_dimension_bits(input_file, output_file, secret_height);
+
     embed_image(secret_file, input_file, output_file);
     copy_remaining_pixels(input_file, output_file);
+
     fclose(secret_file);
     fclose(input_file);
     fclose(output_file);
