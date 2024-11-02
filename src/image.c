@@ -114,68 +114,175 @@ unsigned short get_image_height(Image *image)
 {
     return image ? image->height : 0;
 }
+
 unsigned int hide_message(char *message, char *input_filename, char *output_filename) 
 {
+    Image *image = load_image(input_filename);
+    if (!image) return 0;
 
-    FILE *input_file = fopen(input_filename, "rb");
-    FILE *output_file = fopen(output_filename, "wb");
-    if (!input_file || !output_file) 
+    unsigned int message_length = strlen(message);
+    unsigned int pixels_needed = (message_length + 1) * 8; 
+
+    if (pixels_needed > image->width * image->height * 3) 
     {
-        return 0;  
+        delete_image(image);
+        return 0; 
     }
-    fclose(input_file);
+
+    unsigned int char_index = 0;
+    unsigned int bit_index = 0;
+
+    for (unsigned int i = 0; i < pixels_needed; i++) 
+    {
+        unsigned char *pixel = &image->data[i];
+        unsigned char bit = (message[char_index] >> (7 - bit_index)) & 1;
+
+        *pixel = (*pixel & ~1) | bit;  
+
+        bit_index++;
+        if (bit_index == 8) 
+        {
+            char_index++;
+            bit_index = 0;
+        }
+    }
+
+    FILE *output_file = fopen(output_filename, "w");
+    if (!output_file) 
+    {
+        delete_image(image);
+        return 0;
+    }
+
+    fprintf(output_file, "P3\n%d %d\n255\n", image->width, image->height);
+    for (unsigned int i = 0; i < image->width * image->height * 3; i++) 
+    {
+        fprintf(output_file, "%d ", image->data[i]);
+        if ((i + 1) % (image->width * 3) == 0) fprintf(output_file, "\n");
+    }
+
     fclose(output_file);
-    return strlen(message);  
+    delete_image(image);
+
+    return message_length;
 }
 
 char *reveal_message(char *input_filename) 
 {
-    FILE *file = fopen(input_filename, "rb");
-    if (!file) 
+    Image *image = load_image(input_filename);
+    if (!image) return NULL;
+
+    unsigned int max_chars = (image->width * image->height * 3) / 8;
+    char *message = (char *)malloc(max_chars + 1);
+    if (!message) 
     {
-        return NULL;  
+        delete_image(image);
+        return NULL;
     }
 
-    fclose(file);
-    return strdup("Decoded message"); 
+    unsigned int char_index = 0;
+    unsigned int bit_index = 0;
+    message[0] = 0;
+
+    for (unsigned int i = 0; i < image->width * image->height * 3; i++) 
+    {
+        message[char_index] |= (image->data[i] & 1) << (7 - bit_index);
+        bit_index++;
+
+        if (bit_index == 8) 
+        {
+            if (message[char_index] == '\0') break;
+            char_index++;
+            bit_index = 0;
+            message[char_index] = 0;
+        }
+    }
+
+    delete_image(image);
+    return message;
 }
-
-
-
-
-unsigned int hide_image(char *secret_image_filename, char *input_filename, char *output_filename)
+unsigned int hide_image(char *secret_image_filename, char *input_filename, char *output_filename) 
 {
-   (void)secret_image_filename;
-   (void)input_filename;
-   (void)output_filename;
-   return 0;
+    Image *image = load_image(input_filename);
+    Image *secret_image = load_image(secret_image_filename);
+    if (!image || !secret_image) {
+        if (image) delete_image(image);
+        if (secret_image) delete_image(secret_image);
+        return 0;
+    }
+
+    if (secret_image->width * secret_image->height * 3 > image->width * image->height * 3) 
+    {
+        delete_image(image);
+        delete_image(secret_image);
+        return 0;
+    }
+
+    for (unsigned int i = 0; i < secret_image->width * secret_image->height * 3; i++) 
+    {
+        unsigned char bit = (secret_image->data[i] & 1);
+        image->data[i] = (image->data[i] & ~1) | bit;
+    }
+
+    FILE *output_file = fopen(output_filename, "w");
+    if (!output_file) {
+        delete_image(image);
+        delete_image(secret_image);
+        return 0;
+    }
+
+    fprintf(output_file, "P3\n%d %d\n255\n", image->width, image->height);
+    for (unsigned int i = 0; i < image->width * image->height * 3; i++) 
+    {
+        fprintf(output_file, "%d ", image->data[i]);
+        if ((i + 1) % (image->width * 3) == 0) fprintf(output_file, "\n");
+    }
+
+    fclose(output_file);
+    delete_image(image);
+    delete_image(secret_image);
+
+    return secret_image->width * secret_image->height;
 }
 
-
-
-
-void reveal_image(char *input_filename, char *output_filename)
+void reveal_image(char *input_filename, char *output_filename) 
 {
-   (void)input_filename;
-   (void)output_filename;
+    Image *image = load_image(input_filename);
+    if (!image) return;
+
+    Image *secret_image = (Image *)malloc(sizeof(Image));
+    if (!secret_image) {
+        delete_image(image);
+        return;
+    }
+
+    secret_image->width = image->width;
+    secret_image->height = image->height;
+    secret_image->data = (unsigned char *)malloc(image->width * image->height * 3);
+    if (!secret_image->data) {
+        delete_image(image);
+        free(secret_image);
+        return;
+    }
+
+    for (unsigned int i = 0; i < image->width * image->height * 3; i++) {
+        secret_image->data[i] = (image->data[i] & 1) ? 255 : 0;
+    }
+
+    FILE *output_file = fopen(output_filename, "w");
+    if (!output_file) {
+        delete_image(image);
+        delete_image(secret_image);
+        return;
+    }
+
+    fprintf(output_file, "P3\n%d %d\n255\n", secret_image->width, secret_image->height);
+    for (unsigned int i = 0; i < secret_image->width * secret_image->height * 3; i++) {
+        fprintf(output_file, "%d ", secret_image->data[i]);
+        if ((i + 1) % (secret_image->width * 3) == 0) fprintf(output_file, "\n");
+    }
+
+    fclose(output_file);
+    delete_image(image);
+    delete_image(secret_image);
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
