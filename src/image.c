@@ -140,7 +140,8 @@ void encode_message_char(FILE *input, FILE *output, char current_char)
     }
 }
 
-void copy_remaining_pixels(FILE *input, FILE *output) {
+void copy_remaining_pixels(FILE *input, FILE *output) 
+{
     unsigned int remaining_pixel;
     while (fscanf(input, "%u %*u %*u", &remaining_pixel) == 1) 
     {
@@ -214,7 +215,8 @@ unsigned char extract_character(FILE *input_file)
 char *reveal_message(char *input_filename) 
 {
     FILE *input_file = fopen(input_filename, "r");
-    if (!input_file) {
+    if (!input_file) 
+    {
         return NULL;
     }
 
