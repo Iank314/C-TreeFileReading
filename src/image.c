@@ -100,48 +100,44 @@ unsigned short get_image_height(Image *image)
 {
     return image ? image->height : 0;
 }
+
 unsigned int hide_message(char *message, char *input_filename, char *output_filename)
 {
     Image *input_image = load_image(input_filename);
-    if (!input_image)
-    {
+    if (!input_image) {
         ERROR("Failed to load input image.");
         return 0;
     }
 
-    unsigned int char_count = 0;
     unsigned int message_len = strlen(message);
     unsigned int pixels_needed = (message_len + 1) * 8; // +1 for null character
 
-    if (input_image->width * input_image->height * 3 < pixels_needed)
-    {
+    if (input_image->width * input_image->height * 3 < pixels_needed) {
         ERROR("Image is too small to hide the message.");
         delete_image(input_image);
         return 0;
     }
 
     unsigned char *data = input_image->data;
-    for (unsigned int i = 0; i < message_len + 1; i++)
-    {
+    unsigned int bit_count = 0;
+
+    for (unsigned int i = 0; i <= message_len; i++) {
         unsigned char c = (i < message_len) ? message[i] : '\0';
-        for (int bit = 0; bit < 8; bit++)
-        {
-            data[char_count] = (data[char_count] & ~1) | ((c >> (7 - bit)) & 1);
-            char_count++;
+        for (int bit = 0; bit < 8; bit++) {
+            data[bit_count] = (data[bit_count] & ~1) | ((c >> (7 - bit)) & 1);
+            bit_count++;
         }
     }
 
     FILE *output_file = fopen(output_filename, "w");
-    if (!output_file)
-    {
+    if (!output_file) {
         ERROR("Failed to open output file.");
         delete_image(input_image);
         return 0;
     }
 
     fprintf(output_file, "P3\n%d %d\n255\n", input_image->width, input_image->height);
-    for (unsigned int i = 0; i < input_image->width * input_image->height * 3; i += 3)
-    {
+    for (unsigned int i = 0; i < input_image->width * input_image->height * 3; i += 3) {
         fprintf(output_file, "%d %d %d ", data[i], data[i + 1], data[i + 2]);
         if ((i / 3 + 1) % input_image->width == 0) fprintf(output_file, "\n");
     }
@@ -154,33 +150,31 @@ unsigned int hide_message(char *message, char *input_filename, char *output_file
 char *reveal_message(char *input_filename)
 {
     Image *input_image = load_image(input_filename);
-    if (!input_image)
-    {
+    if (!input_image) {
         ERROR("Failed to load input image.");
         return NULL;
     }
 
     unsigned char *data = input_image->data;
-    unsigned int char_count = 0;
-    char *message = (char *)malloc(1024);
-    if (!message)
-    {
+    unsigned int bit_count = 0;
+    char *message = (char *)malloc(1024); // Assuming the message fits in 1024 bytes
+    if (!message) {
         delete_image(input_image);
         return NULL;
     }
 
-    while (1)
-    {
+    unsigned int char_index = 0;
+    while (1) {
         unsigned char c = 0;
-        for (int bit = 0; bit < 8; bit++)
-        {
-            c = (c << 1) | (data[char_count] & 1);
-            char_count++;
+        for (int bit = 0; bit < 8; bit++) {
+            c = (c << 1) | (data[bit_count] & 1);
+            bit_count++;
         }
 
         if (c == '\0') break;
-        message[strlen(message)] = c;
+        message[char_index++] = c;
     }
+    message[char_index] = '\0'; // Null terminate the string
 
     delete_image(input_image);
     return message;
@@ -190,8 +184,7 @@ unsigned int hide_image(char *secret_image_filename, char *input_filename, char 
 {
     Image *input_image = load_image(input_filename);
     Image *secret_image = load_image(secret_image_filename);
-    if (!input_image || !secret_image)
-    {
+    if (!input_image || !secret_image) {
         ERROR("Failed to load images.");
         if (input_image) delete_image(input_image);
         if (secret_image) delete_image(secret_image);
@@ -201,8 +194,7 @@ unsigned int hide_image(char *secret_image_filename, char *input_filename, char 
     unsigned int total_pixels = input_image->width * input_image->height * 3;
     unsigned int pixels_needed = (2 + secret_image->width * secret_image->height) * 8;
 
-    if (total_pixels < pixels_needed)
-    {
+    if (total_pixels < pixels_needed) {
         ERROR("Input image is too small to hide the secret image.");
         delete_image(input_image);
         delete_image(secret_image);
@@ -210,36 +202,30 @@ unsigned int hide_image(char *secret_image_filename, char *input_filename, char 
     }
 
     unsigned char *data = input_image->data;
-    unsigned int char_count = 0;
+    unsigned int bit_count = 0;
 
-    for (int i = 0; i < 8; i++)
-    {
-        data[char_count] = (data[char_count] & ~1) | ((secret_image->width >> (7 - i)) & 1);
-        char_count++;
+    for (int i = 0; i < 8; i++) {
+        data[bit_count] = (data[bit_count] & ~1) | ((secret_image->width >> (7 - i)) & 1);
+        bit_count++;
     }
 
-    for (int i = 0; i < 8; i++)
-    {
-        data[char_count] = (data[char_count] & ~1) | ((secret_image->height >> (7 - i)) & 1);
-        char_count++;
+    for (int i = 0; i < 8; i++) {
+        data[bit_count] = (data[bit_count] & ~1) | ((secret_image->height >> (7 - i)) & 1);
+        bit_count++;
     }
 
-    for (int row = 0; row < secret_image->height; row++)
-    {
-        for (int col = 0; col < secret_image->width; col++)
-        {
+    for (int row = 0; row < secret_image->height; row++) {
+        for (int col = 0; col < secret_image->width; col++) {
             unsigned char intensity = get_image_intensity(secret_image, row, col);
-            for (int bit = 0; bit < 8; bit++)
-            {
-                data[char_count] = (data[char_count] & ~1) | ((intensity >> (7 - bit)) & 1);
-                char_count++;
+            for (int bit = 0; bit < 8; bit++) {
+                data[bit_count] = (data[bit_count] & ~1) | ((intensity >> (7 - bit)) & 1);
+                bit_count++;
             }
         }
     }
 
     FILE *output_file = fopen(output_filename, "w");
-    if (!output_file)
-    {
+    if (!output_file) {
         ERROR("Failed to open output file.");
         delete_image(input_image);
         delete_image(secret_image);
@@ -247,8 +233,7 @@ unsigned int hide_image(char *secret_image_filename, char *input_filename, char 
     }
 
     fprintf(output_file, "P3\n%d %d\n255\n", input_image->width, input_image->height);
-    for (unsigned int i = 0; i < total_pixels; i += 3)
-    {
+    for (unsigned int i = 0; i < total_pixels; i += 3) {
         fprintf(output_file, "%d %d %d ", data[i], data[i + 1], data[i + 2]);
         if ((i / 3 + 1) % input_image->width == 0) fprintf(output_file, "\n");
     }
@@ -262,36 +247,32 @@ unsigned int hide_image(char *secret_image_filename, char *input_filename, char 
 void reveal_image(char *input_filename, char *output_filename)
 {
     Image *input_image = load_image(input_filename);
-    if (!input_image)
-    {
+    if (!input_image) {
         ERROR("Failed to load input image.");
         return;
     }
 
     unsigned char *data = input_image->data;
-    unsigned int char_count = 0;
+    unsigned int bit_count = 0;
 
     unsigned short width = 0, height = 0;
 
     for (int i = 0; i < 8; i++)
-        width = (width << 1) | (data[char_count++] & 1);
+        width = (width << 1) | (data[bit_count++] & 1);
 
     for (int i = 0; i < 8; i++)
-        height = (height << 1) | (data[char_count++] & 1);
+        height = (height << 1) | (data[bit_count++] & 1);
 
     Image *secret_image = (Image *)malloc(sizeof(Image));
     secret_image->width = width;
     secret_image->height = height;
     secret_image->data = (unsigned char *)malloc(width * height * 3);
 
-    for (int row = 0; row < height; row++)
-    {
-        for (int col = 0; col < width; col++)
-        {
+    for (int row = 0; row < height; row++) {
+        for (int col = 0; col < width; col++) {
             unsigned char intensity = 0;
-            for (int bit = 0; bit < 8; bit++)
-            {
-                intensity = (intensity << 1) | (data[char_count++] & 1);
+            for (int bit = 0; bit < 8; bit++) {
+                intensity = (intensity << 1) | (data[bit_count++] & 1);
             }
             secret_image->data[(row * width + col) * 3] = intensity;
             secret_image->data[(row * width + col) * 3 + 1] = intensity;
@@ -300,8 +281,7 @@ void reveal_image(char *input_filename, char *output_filename)
     }
 
     FILE *output_file = fopen(output_filename, "w");
-    if (!output_file)
-    {
+    if (!output_file) {
         ERROR("Failed to open output file.");
         delete_image(input_image);
         delete_image(secret_image);
@@ -309,8 +289,7 @@ void reveal_image(char *input_filename, char *output_filename)
     }
 
     fprintf(output_file, "P3\n%d %d\n255\n", width, height);
-    for (unsigned int i = 0; i < width * height * 3; i += 3)
-    {
+    for (unsigned int i = 0; i < width * height * 3; i += 3) {
         fprintf(output_file, "%d %d %d ", secret_image->data[i], secret_image->data[i + 1], secret_image->data[i + 2]);
         if ((i / 3 + 1) % width == 0) fprintf(output_file, "\n");
     }
