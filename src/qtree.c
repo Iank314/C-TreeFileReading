@@ -220,24 +220,24 @@ QTNode *load_preorder_qt(char *filename)
     }
     return root;
 }
-void save_preorder_helper(FILE *fp, QTNode *node, int x, int y)
+void save_preorder_helper(FILE *fp, QTNode *node, int x, int y, int width, int height)
 {
     if (!node) return;
 
     if (node->is_leaf) 
     {
-        fprintf(fp, "L %d %d %d %d %d\n", node->intensity, y, node->height, x, node->width);
+        fprintf(fp, "L %d %d %d %d %d\n", node->intensity, y, height, x, width);
     } 
     else 
     {
-        fprintf(fp, "N %d %d %d %d %d\n", node->intensity, y, node->height, x, node->width);
-        int half_width = node->width / 2;
-        int half_height = node->height / 2;
+        fprintf(fp, "N %d %d %d %d %d\n", node->intensity, y, height, x, width);
+        int half_width = width / 2;
+        int half_height = height / 2;
 
-        save_preorder_helper(fp, node->children[0], x, y);
-        save_preorder_helper(fp, node->children[1], x + half_width, y);
-        save_preorder_helper(fp, node->children[2], x, y + half_height);
-        save_preorder_helper(fp, node->children[3], x + half_width, y + half_height);
+        save_preorder_helper(fp, node->children[0], x, y, half_width, half_height);
+        save_preorder_helper(fp, node->children[1], x + half_width, y, width - half_width, half_height);
+        save_preorder_helper(fp, node->children[2], x, y + half_height, half_width, height - half_height);
+        save_preorder_helper(fp, node->children[3], x + half_width, y + half_height, width - half_width, height - half_height);
     }
 }
 
@@ -256,9 +256,11 @@ void save_preorder_qt(QTNode *root, char *filename)
         return;
     }
 
-    save_preorder_helper(fp, root, 0, 0);
+    save_preorder_helper(fp, root, 0, 0, root->width, root->height);
     fclose(fp);
 }
+
+
 void fill_region(FILE *fp, QTNode *node, int x, int y, int width, int height)
 {
     if (node == NULL) return;
