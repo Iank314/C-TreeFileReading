@@ -202,7 +202,6 @@ QTNode *load_preorder_qt(char *filename)
     FILE *file = fopen(filename, "r");
     if (!file) 
     {
-        ERROR("Failed to open file for reading.");
         return NULL;
     }
     QTNode *root = load_preorder_qt_helper(file);
@@ -259,13 +258,11 @@ void save_preorder_qt(QTNode *root, char *filename)
     FILE *file = fopen(filename, "w");
     if (!file)
     {
-        ERROR("Failed to open file for writing.");
         return;
     }
     save_preorder_qt_helper(root, file, 0, 0, root->width, root->height);
     fclose(file);
 }
-
 
 
 void save_qtree_as_ppm_helper(QTNode *node, FILE *file)
@@ -298,7 +295,6 @@ void save_qtree_as_ppm(QTNode *root, char *filename)
     FILE *file = fopen(filename, "w");
     if (file == NULL) 
     {
-        ERROR("Failed to open file for writing.");
         return;
     }
 
