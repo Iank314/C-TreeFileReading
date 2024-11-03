@@ -218,39 +218,39 @@ QTNode *load_preorder_qt(char *filename)
     }
     return root;
 }
-static void save_preorder_qt_helper(QTNode *node, FILE *file, int row, int col, int width, int height)
+
+void save_preorder_qt_helper(QTNode *node, FILE *file, int row, int col, int width, int height)
 {
     if (!node) return;
 
-    if (node->is_leaf)
+    if (node->is_leaf || (node->children[0] == NULL && node->children[1] == NULL && node->children[2] == NULL && node->children[3] == NULL)) 
     {
         fprintf(file, "L %d %d %d %d %d\n", node->intensity, row, height, col, width);
+        return;
     }
-    else
-    {
-        fprintf(file, "N %d %d %d %d %d\n", node->intensity, row, height, col, width);
 
-        if (width > 1 && height > 1)
-        {
-            int half_width = width / 2;
-            int half_height = height / 2;
-            save_preorder_qt_helper(node->children[0], file, row, col, half_width, half_height);
-            save_preorder_qt_helper(node->children[1], file, row, col + half_width, width - half_width, half_height);
-            save_preorder_qt_helper(node->children[2], file, row + half_height, col, half_width, height - half_height);
-            save_preorder_qt_helper(node->children[3], file, row + half_height, col + half_width, width - half_width, height - half_height);
-        }
-        else if (width > 1)
-        {
-            int half_width = width / 2;
-            save_preorder_qt_helper(node->children[0], file, row, col, half_width, height);
-            save_preorder_qt_helper(node->children[1], file, row, col + half_width, width - half_width, height);
-        }
-        else if (height > 1)
-        {
-            int half_height = height / 2;
-            save_preorder_qt_helper(node->children[0], file, row, col, width, half_height);
-            save_preorder_qt_helper(node->children[2], file, row + half_height, col, width, height - half_height);
-        }
+    fprintf(file, "N %d %d %d %d %d\n", node->intensity, row, height, col, width);
+
+    if (width > 1 && height > 1) 
+    {
+        int half_width = width / 2;
+        int half_height = height / 2;
+        save_preorder_qt_helper(node->children[0], file, row, col, half_width, half_height);
+        save_preorder_qt_helper(node->children[1], file, row, col + half_width, width - half_width, half_height);
+        save_preorder_qt_helper(node->children[2], file, row + half_height, col, half_width, height - half_height);
+        save_preorder_qt_helper(node->children[3], file, row + half_height, col + half_width, width - half_width, height - half_height);
+    }
+    else if (width > 1)
+    {
+        int half_width = width / 2;
+        save_preorder_qt_helper(node->children[0], file, row, col, half_width, height);
+        save_preorder_qt_helper(node->children[1], file, row, col + half_width, width - half_width, height);
+    }
+    else if (height > 1)
+    {
+        int half_height = height / 2;
+        save_preorder_qt_helper(node->children[0], file, row, col, width, half_height);
+        save_preorder_qt_helper(node->children[2], file, row + half_height, col, width, height - half_height);
     }
 }
 
