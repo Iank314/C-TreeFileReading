@@ -299,7 +299,10 @@ void save_qtree_as_ppm(QTNode *root, char *filename)
     fprintf(file, "%d %d\n", root->width, root->height);
     fprintf(file, "255\n");
 
-    save_qtree_as_ppm_helper(root, file);
+    save_qtree_as_ppm_helper(root->children[0], file);
+    save_qtree_as_ppm_helper(root->children[1], file);
+    save_qtree_as_ppm_helper(root->children[2], file);
+    save_qtree_as_ppm_helper(root->children[3], file);
 
     fclose(file);
 }
