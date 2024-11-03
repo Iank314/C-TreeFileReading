@@ -241,10 +241,66 @@ void save_preorder_qt(QTNode *root, char *filename)
     fclose(file);
 }
 
-void save_qtree_as_ppm(QTNode *root, char *filename)
-{
-    (void)*root;
-    (void)*filename;
+void fill_region(unsigned char *image_data, int width, int row, int col, int region_width, int region_height, unsigned char intensity) {
+    for (int i = row; i < row + region_height; i++) {
+        for (int j = col; j < col + region_width; j++) {
+            int index = (i * width + j) * 3;
+            image_data[index] = intensity;
+            image_data[index + 1] = intensity;
+            image_data[index + 2] = intensity;
+        }
+    }
 }
 
+void save_ppm_helper(QTNode *node, unsigned char *image_data, int width, int row, int col) {
+    if (!node) return;
+    if (node->is_leaf) {
+        fill_region(image_data, width, row, col, node->width, node->height, node->intensity);
+    } else {
+        int half_width = node->width / 2;
+        int half_height = node->height / 2;
+        save_ppm_helper(node->children[0], image_data, width, row, col);
+        save_ppm_helper(node->children[1], image_data, width, row, col + half_width);
+        save_ppm_helper(node->children[2], image_data, width, row + half_height, col);
+        save_ppm_helper(node->children[3], image_data, width, row + half_height, col + half_width);
+    }
+}
+
+void save_qtree_as_ppm(QTNode *root, char *filename) {
+    if (!root) {
+        ERROR("Root node is NULL.");
+        return;
+    }
+
+    FILE *file = fopen(filename, "w");
+    if (!file) {
+        ERROR("Failed to open file for writing.");
+        return;
+    }
+
+    int width = root->width;
+    int height = root->height;
+
+    fprintf(file, "P3\n%d %d\n255\n", width, height);
+
+    unsigned char *image_data = (unsigned char *)malloc(width * height * 3 * sizeof(unsigned char));
+    if (!image_data) {
+        ERROR("Failed to allocate memory for image data.");
+        fclose(file);
+        return;
+    }
+
+    save_ppm_helper(root, image_data, width, 0, 0);
+
+    for (int i = 0; i < height; i++) {
+        for (int j = 0; j < width; j++) {
+            int index = (i * width + j) * 3;
+            fprintf(file, "%d %d %d ", image_data[index], image_data[index + 1], image_data[index + 2]);
+        }
+        fprintf(file, "\n");
+    }
+
+    free(image_data);
+    fclose(file);
+}
 
