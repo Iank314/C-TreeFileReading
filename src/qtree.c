@@ -281,13 +281,10 @@ void save_qtree_as_ppm_helper(QTNode *node, FILE *file)
         return;
     }
 
-    for (int i = 0; i < 4; i++) 
-    {
-        if (node->children[i]) 
-        {
-            save_qtree_as_ppm_helper(node->children[i], file);
-        }
-    }
+    save_qtree_as_ppm_helper(node->children[0], file);
+    save_qtree_as_ppm_helper(node->children[1], file);
+    save_qtree_as_ppm_helper(node->children[2], file);
+    save_qtree_as_ppm_helper(node->children[3], file);
 }
 
 void save_qtree_as_ppm(QTNode *root, char *filename)
