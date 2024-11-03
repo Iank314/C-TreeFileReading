@@ -264,19 +264,21 @@ void save_preorder_qt(QTNode *root, char *filename)
     fclose(file);
 }
 
+
 void fill_region(unsigned char *buffer, unsigned char intensity, int start_row, int start_col, int width, int height, int image_width) 
 {
     for (int i = start_row; i < start_row + height; i++) 
     {
         for (int j = start_col; j < start_col + width; j++) 
         {
-            int index = (i * image_width + j) * 3; 
+            int index = (i * image_width + j) * 3;
             buffer[index] = intensity;
             buffer[index + 1] = intensity;
             buffer[index + 2] = intensity;
         }
     }
 }
+
 void save_qtree_as_ppm_helper(QTNode *node, unsigned char *buffer, int row, int col, int image_width) 
 {
     if (node == NULL) return;
@@ -335,7 +337,7 @@ void save_qtree_as_ppm(QTNode *root, char *filename)
         for (int j = 0; j < root->width; j++) 
         {
             int idx = (i * root->width + j) * 3;
-            fprintf(fp, "%d %d %d ", buffer[idx], buffer[idx], buffer[idx]);
+            fprintf(fp, "%d %d %d ", buffer[idx], buffer[idx + 1], buffer[idx + 2]);
         }
         fprintf(fp, "\n");
     }
