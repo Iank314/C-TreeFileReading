@@ -261,6 +261,8 @@ void save_preorder_qt(QTNode *root, char *filename)
 }
 void fill_region(FILE *fp, QTNode *node, int x, int y, int width, int height)
 {
+    if (node == NULL) return;
+
     if (node->is_leaf) 
     {
         for (int i = y; i < y + height; i++) 
@@ -276,29 +278,36 @@ void fill_region(FILE *fp, QTNode *node, int x, int y, int width, int height)
         int half_width = width / 2;
         int half_height = height / 2;
 
-        if (node->children[0]) fill_region(fp, node->children[0], x, y, half_width, half_height);
-        if (node->children[1]) fill_region(fp, node->children[1], x + half_width, y, width - half_width, half_height);
-        if (node->children[2]) fill_region(fp, node->children[2], x, y + half_height, half_width, height - half_height);
-        if (node->children[3]) fill_region(fp, node->children[3], x + half_width, y + half_height, width - half_width, height - half_height);
+        if (node->children[0] && half_width > 0 && half_height > 0)
+            fill_region(fp, node->children[0], x, y, half_width, half_height);
+
+        if (node->children[1] && (width - half_width) > 0 && half_height > 0)
+            fill_region(fp, node->children[1], x + half_width, y, width - half_width, half_height);
+
+        if (node->children[2] && half_width > 0 && (height - half_height) > 0)
+            fill_region(fp, node->children[2], x, y + half_height, half_width, height - half_height);
+
+        if (node->children[3] && (width - half_width) > 0 && (height - half_height) > 0)
+            fill_region(fp, node->children[3], x + half_width, y + half_height, width - half_width, height - half_height);
     }
 }
 
 void save_qtree_as_ppm(QTNode *root, char *filename)
 {
-    if (!root) 
-    {
+    if (!root) {
         ERROR("Root node is NULL.");
         return;
     }
-    
+
     FILE *fp = fopen(filename, "w");
-    if (!fp) 
-    {
+    if (!fp) {
         perror("Failed to open file for writing");
         return;
     }
 
     fprintf(fp, "P3\n%d %d\n255\n", root->width, root->height);
+
     fill_region(fp, root, 0, 0, root->width, root->height);
+
     fclose(fp);
 }
