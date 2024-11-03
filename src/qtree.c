@@ -27,8 +27,6 @@ QTNode *create_quadtree_recursive(Image *image, int x, int y, int width, int hei
         ERROR("Memory allocation failed for QTNode");
         return NULL;
     }
-
-
     double total_intensity = 0.0;
     int pixel_count = width * height;
     for (int i = y; i < y + height; i++)
@@ -213,57 +211,40 @@ QTNode *load_preorder_qt(char *filename)
     return root;
 }
 
-
-static void save_preorder_qt_helper(QTNode *node, FILE *file, int row, int col, int width, int height)
+void save_preorder_qt_helper(QTNode *node, FILE *file, int depth)
 {
-    if (!node) return;
-
-
-    if (node->is_leaf)
-    {
-        fprintf(file, "L %d %d %d %d %d\n", node->intensity, row, height, col, width);
-    }
-    else
-    {
-        fprintf(file, "N %d %d %d %d %d\n", node->intensity, row, height, col, width);
-
-
-        if (width > 1 && height > 1)
-        {
-            int half_width = width / 2;
-            int half_height = height / 2;
-            save_preorder_qt_helper(node->children[0], file, row, col, half_width, half_height);
-            save_preorder_qt_helper(node->children[1], file, row, col + half_width, width - half_width, half_height);
-            save_preorder_qt_helper(node->children[2], file, row + half_height, col, half_width, height - half_height);
-            save_preorder_qt_helper(node->children[3], file, row + half_height, col + half_width, width - half_width, height - half_height);
-        }
-        else if (width > 1)
-        {
-            int half_width = width / 2;
-            save_preorder_qt_helper(node->children[0], file, row, col, half_width, height);
-            save_preorder_qt_helper(node->children[1], file, row, col + half_width, width - half_width, height);
-        }
-        else if (height > 1)
-        {
-            int half_height = height / 2;
-            save_preorder_qt_helper(node->children[0], file, row, col, width, half_height);
-            save_preorder_qt_helper(node->children[2], file, row + half_height, col, width, height - half_height);
-        }
-    }
-}
-
-
-void save_preorder_qt(QTNode *root, char *filename)
-{
-    FILE *file = fopen(filename, "w");
-    if (!file)
-    {
+    if(node == NULL){
         return;
     }
-    save_preorder_qt_helper(root, file, 0, 0, root->width, root->height);
-    fclose(file);
+
+    for(int i = 0; i < depth; i++){
+        fprintf(file, "   ");
+    }
+
+    if(node->is_leaf)
+    {
+        fprintf(file, "%c %hhu %d %d\n", 'L', node->intensity, node->height, node->width);
+    }
+    else{
+        fprintf(file, "%c %hhu %d %d\n", 'N', node->intensity, node->height, node->width);
+        save_preorder_qt_helper(node->children[0], file, depth+1);
+        save_preorder_qt_helper(node->children[1], file, depth+1);
+        save_preorder_qt_helper(node->children[2], file, depth+1);
+        save_preorder_qt_helper(node->children[3], file, depth+1);
+    }
 }
 
+void save_preorder_qt(QTNode *root, char *filename) 
+{
+    FILE *file = fopen(filename, "w");
+    if(file == NULL){
+        ERROR("Failed to open file %s for writing", filename);
+        return;
+    }
+
+    save_preorder_qt_helper(root, file, 0);
+    fclose(file);
+}
 void save_qtree_as_ppm(QTNode *root, char *filename)
 {
     (void)*root;
