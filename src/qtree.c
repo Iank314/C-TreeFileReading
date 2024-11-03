@@ -275,79 +275,59 @@ void save_preorder_qt(QTNode *root, char *filename)
 
 
 
-// void fill_region(unsigned char *buffer, unsigned char intensity, int start_row, int start_col, int width, int height, int image_width)
-// {
-//     for (int i = start_row; i < start_row + height; i++)
-//     {
-//         for (int j = start_col; j < start_col + width; j++)
-//         {
-//             int index = (i * image_width + j) * 3;
-//             buffer[index] = intensity;
-//             buffer[index + 1] = intensity;
-//             buffer[index + 2] = intensity;
-//         }
-//     }
-// }
+void fill_region(unsigned char *buffer, unsigned char intensity, int start_row, int start_col, int width, int height, int image_width)
+{
+    for (int i = start_row; i < start_row + height; i++)
+    {
+        for (int j = start_col; j < start_col + width; j++)
+        {
+            int index = (i * image_width + j) * 3;
+            buffer[index] = intensity;
+            buffer[index + 1] = intensity;
+            buffer[index + 2] = intensity;
+        }
+    }
+}
 
 
 
+void save_qtree_as_ppm_helper(QTNode *node, FILE *file)
+{
+    if (node == NULL) 
+    {
+        return;
+    }
 
-// void save_qtree_as_ppm_helper(QTNode *node, FILE *fp)
-// {
-//     if (!node)
-//     {
-//         return;
-//     }
-//     if (!node->children[0] && !node->children[1] && !node->children[2] && !node->children[3])
-//     {
-//         unsigned int i = 0;
-//         while (i < (unsigned int)node->height)
-//         {
-//             unsigned int j = 0;
-//             while (j < (unsigned int)node->width)
-//             {
-//                 fprintf(fp, "%hu %hu %hu ", node->intensity, node->intensity, node->intensity);
-//                 j++;
-//             }
-//             fprintf(fp, "\n");
-//             i++;
-//         }
-//     }
-//     else
-//     {
-//         for (int i = 0; i < 4; i++)
-//         {
-//             if (node->children[i])
-//             {
-//                 save_qtree_as_ppm_helper(node->children[i], fp);
-//             }
-//         }
-//     }
-// }
+    if (node->is_leaf == 1) 
+    {
+        for (unsigned int i = 0; i < (unsigned int)(node->width * node->height); i++) 
+        {
+            fprintf(file, "%hhu %hhu %hhu ", node->intensity, node->intensity, node->intensity);
+        }
+        return;
+    }
 
-
-// void save_qtree_as_ppm(QTNode *root, char *filename)
-// {
-//     FILE *file;
-   
-//     file = fopen(filename, "w");
-//     if (file == NULL)
-//     {
-//         return;
-//     }
-
-
-//     fprintf(file, "P3\n");
-//     fprintf(file, "%hu %hu\n", root->width, root->height);
-//     fprintf(file, "255\n");
-
-
-//     save_qtree_as_ppm_helper(root, file);
-//     fclose(file);
-// }
+    for (int i = 0; i < 4; i++) 
+    {
+        if (node->children[i]) 
+        {
+            save_qtree_as_ppm_helper(node->children[i], file);
+        }
+    }
+}
 
 void save_qtree_as_ppm(QTNode *root, char *filename)
 {
-    (void)*root;
-    (void)*filename;
+    FILE *file = fopen(filename, "w");
+    if (file == NULL) 
+    {
+        return;
+    }
+
+    fprintf(file, "P3\n");
+    fprintf(file, "%hu %hu\n", root->width, root->height);
+    fprintf(file, "255\n");
+
+    save_qtree_as_ppm_helper(root, file);
+    fclose(file);
 }
