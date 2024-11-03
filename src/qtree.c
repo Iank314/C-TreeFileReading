@@ -3,7 +3,6 @@
 #include "image.h"
 #include "qtree.h"
 #include <stdio.h>
-#include <string.h>
 
 
 double calculate_rmse(Image *image, int x, int y, int width, int height, unsigned char avg_intensity)
@@ -208,66 +207,50 @@ static QTNode *load_preorder_qt_helper(FILE *file)
 QTNode *load_preorder_qt(char *filename)
 {
     FILE *file = fopen(filename, "r");
-    if (!file) {
+    if (!file) 
+    {
         ERROR("Failed to open file for reading.");
         return NULL;
     }
     QTNode *root = load_preorder_qt_helper(file);
     fclose(file);
-    if (!root) {
+    if (!root) 
+    {
         ERROR("Failed to load quadtree from file.");
     }
     return root;
 }
 
-static void save_preorder_qt_helper(QTNode *node, FILE *file, int row, int col, int width, int height) 
+void save_preorder_qt_recursive(QTNode *node, FILE *file, int x, int y) 
 {
-    if (!node) return;
+    if (node == NULL) return;
 
     if (node->is_leaf) 
     {
-        fprintf(file, "L %d %d %d %d %d\n", node->intensity, row, height, col, width);
+        fprintf(file, "L %d %d %d %d %d\n", node->intensity, y, x, node->height, node->width);
     } 
     else 
     {
-        fprintf(file, "N %d %d %d %d %d\n", node->intensity, row, height, col, width);
-
-        if (width > 1 && height > 1) 
-        {
-            int half_width = width / 2;
-            int half_height = height / 2;
-            if (node->children[0]) save_preorder_qt_helper(node->children[0], file, row, col, half_width, half_height);
-            if (node->children[1]) save_preorder_qt_helper(node->children[1], file, row, col + half_width, width - half_width, half_height);
-            if (node->children[2]) save_preorder_qt_helper(node->children[2], file, row + half_height, col, half_width, height - half_height);
-            if (node->children[3]) save_preorder_qt_helper(node->children[3], file, row + half_height, col + half_width, width - half_width, height - half_height);
-        } 
-        else if (width > 1) 
-        {
-            int half_width = width / 2;
-            if (node->children[0]) save_preorder_qt_helper(node->children[0], file, row, col, half_width, height);
-            if (node->children[1]) save_preorder_qt_helper(node->children[1], file, row, col + half_width, width - half_width, height);
-        } 
-        else if (height > 1) 
-        {
-            int half_height = height / 2;
-            if (node->children[0]) save_preorder_qt_helper(node->children[0], file, row, col, width, half_height);
-            if (node->children[2]) save_preorder_qt_helper(node->children[2], file, row + half_height, col, width, height - half_height);
-        }
+        fprintf(file, "N %d %d %d %d %d\n", node->intensity, y, x, node->height, node->width);
+        save_preorder_qt_recursive(node->children[0], file, x, y);
+        save_preorder_qt_recursive(node->children[1], file, x + node->width / 2, y);
+        save_preorder_qt_recursive(node->children[2], file, x, y + node->height / 2);
+        save_preorder_qt_recursive(node->children[3], file, x + node->width / 2, y + node->height / 2);
     }
 }
 
 void save_preorder_qt(QTNode *root, char *filename) 
 {
     FILE *file = fopen(filename, "w");
-    if (!file) 
+    if (file == NULL) 
     {
-        ERROR("Failed to open file for writing.");
+        ERROR("Failed to open file %s for writing", filename);
         return;
     }
-    save_preorder_qt_helper(root, file, 0, 0, root->width, root->height);
+
+    save_preorder_qt_recursive(root, file, 0, 0);
     fclose(file);
 }
-
 void save_qtree_as_ppm(QTNode *root, char *filename)
 {
     (void)*root;
