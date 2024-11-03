@@ -264,7 +264,6 @@ void save_preorder_qt(QTNode *root, char *filename)
     fclose(file);
 }
 
-
 void fill_region(unsigned char *buffer, unsigned char intensity, int start_row, int start_col, int width, int height, int image_width) 
 {
     for (int i = start_row; i < start_row + height; i++) 
@@ -278,13 +277,13 @@ void fill_region(unsigned char *buffer, unsigned char intensity, int start_row, 
         }
     }
 }
+
 void save_qtree_as_ppm_helper(QTNode *node, unsigned char *buffer, int row, int col, int image_width) 
 {
     if (node == NULL) return;
 
     if (node->is_leaf) 
     {
-        // Directly fill the buffer with the node's intensity for leaf regions
         fill_region(buffer, node->intensity, row, col, node->width, node->height, image_width);
     } 
     else 
@@ -304,16 +303,16 @@ void save_qtree_as_ppm(QTNode *root, char *filename)
     FILE *fp = fopen(filename, "w");
     if (fp == NULL) 
     {
-        ERROR("Failed to open file for writing.");
+        fprintf(stderr, "Failed to open file for writing.\n");
         return;
     }
 
-    fprintf(fp, "P3\n%hu %hu\n255\n", root->width, root->height);
+    fprintf(fp, "P3\n%d %d\n255\n", root->width, root->height);
 
     unsigned char *buffer = malloc(3 * root->width * root->height);
     if (buffer == NULL) 
     {
-        ERROR("Memory allocation failed for image buffer.");
+        fprintf(stderr, "Memory allocation failed for image buffer.\n");
         fclose(fp);
         return;
     }
@@ -325,7 +324,7 @@ void save_qtree_as_ppm(QTNode *root, char *filename)
         for (int j = 0; j < root->width; j++) 
         {
             int idx = (i * root->width + j) * 3;
-            fprintf(fp, "%3hhu %3hhu %3hhu ", buffer[idx], buffer[idx+1], buffer[idx+2]);
+            fprintf(fp, "%d %d %d ", buffer[idx], buffer[idx + 1], buffer[idx + 2]);
         }
         fprintf(fp, "\n");
     }
