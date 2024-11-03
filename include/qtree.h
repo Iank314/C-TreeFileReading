@@ -11,7 +11,10 @@
 typedef struct QTNode 
 {
     unsigned char intensity;
-    struct QTNode *children[4];
+    struct QTNode *child1;
+    struct QTNode *child2;
+    struct QTNode *child3;
+    struct QTNode *child4;
     int is_leaf;
     int width;   
     int height;  
