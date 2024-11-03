@@ -124,12 +124,10 @@ static QTNode *load_preorder_qt_helper(FILE *file)
     char node_type;
     int intensity, row, height, col, width;
 
-
     if (fscanf(file, " %c %d %d %d %d %d", &node_type, &intensity, &row, &height, &col, &width) != 6)
     {
         return NULL;
     }
-
 
     QTNode *node = (QTNode *)malloc(sizeof(QTNode));
     if (!node)
@@ -143,7 +141,6 @@ static QTNode *load_preorder_qt_helper(FILE *file)
     node->width = width;
     node->height = height;
 
-
     if (node_type == 'L')
     {
         node->is_leaf = 1;
@@ -152,11 +149,7 @@ static QTNode *load_preorder_qt_helper(FILE *file)
     else if (node_type == 'N')
     {
         node->is_leaf = 0;
-
-
         for (int i = 0; i < 4; i++) node->children[i] = NULL;
-
-
         if (width > 1 && height > 1)
         {
             for (int i = 0; i < 4; i++)
