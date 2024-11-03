@@ -277,7 +277,6 @@ void fill_region(unsigned char *buffer, unsigned char intensity, int start_row, 
         }
     }
 }
-
 void save_qtree_as_ppm_helper(QTNode *node, unsigned char *buffer, int row, int col, int image_width) 
 {
     if (node == NULL) return;
@@ -287,14 +286,26 @@ void save_qtree_as_ppm_helper(QTNode *node, unsigned char *buffer, int row, int 
         fill_region(buffer, node->intensity, row, col, node->width, node->height, image_width);
     } 
     else 
-    { 
+    {
         int half_width = node->width / 2;
         int half_height = node->height / 2;
 
-        save_qtree_as_ppm_helper(node->children[0], buffer, row, col, image_width);
-        save_qtree_as_ppm_helper(node->children[1], buffer, row, col + half_width, image_width);
-        save_qtree_as_ppm_helper(node->children[2], buffer, row + half_height, col, image_width);
-        save_qtree_as_ppm_helper(node->children[3], buffer, row + half_height, col + half_width, image_width);
+        if (node->children[0]) 
+        {
+            save_qtree_as_ppm_helper(node->children[0], buffer, row, col, image_width);
+        }
+        if (node->children[1]) 
+        {
+            save_qtree_as_ppm_helper(node->children[1], buffer, row, col + half_width, image_width);
+        }
+        if (node->children[2]) 
+        {
+            save_qtree_as_ppm_helper(node->children[2], buffer, row + half_height, col, image_width);
+        }
+        if (node->children[3]) 
+        {
+            save_qtree_as_ppm_helper(node->children[3], buffer, row + half_height, col + half_width, image_width);
+        }
     }
 }
 
@@ -309,7 +320,7 @@ void save_qtree_as_ppm(QTNode *root, char *filename)
 
     fprintf(fp, "P3\n%d %d\n255\n", root->width, root->height);
 
-    unsigned char *buffer = malloc(3 * root->width * root->height);
+    unsigned char *buffer = calloc(3, root->width * root->height);
     if (buffer == NULL) 
     {
         fprintf(stderr, "Memory allocation failed for image buffer.\n");
@@ -324,7 +335,7 @@ void save_qtree_as_ppm(QTNode *root, char *filename)
         for (int j = 0; j < root->width; j++) 
         {
             int idx = (i * root->width + j) * 3;
-            fprintf(fp, "%d %d %d ", buffer[idx], buffer[idx + 1], buffer[idx + 2]);
+            fprintf(fp, "%d %d %d ", buffer[idx], buffer[idx], buffer[idx]);
         }
         fprintf(fp, "\n");
     }
