@@ -264,43 +264,8 @@ void save_preorder_qt(QTNode *root, char *filename)
     fclose(file);
 }
 
-
-void save_qtree_as_ppm_helper(QTNode *node, FILE *file)
-{
-    if (node == NULL) 
-    {
-        return;
-    }
-
-    if (node->is_leaf == 1) 
-    {
-        for (int i = 0; i < node->width * node->height; i++) 
-        {
-            fprintf(file, "%hhu %hhu %hhu ", node->intensity, node->intensity, node->intensity);
-        }
-        return;
-    }
-    for (int i = 0; i < 4; i++) 
-    {
-            save_qtree_as_ppm_helper(node->children[i], file);
-    }
-}
-
 void save_qtree_as_ppm(QTNode *root, char *filename)
 {
-    FILE *file = fopen(filename, "w");
-    if (file == NULL) 
-    {
-        return;
-    }
-
-    fprintf(file, "P3\n");
-    fprintf(file, "%d %d\n", root->width, root->height);
-    fprintf(file, "255\n");
-
-    for (int i = 0; i < 4; i++) 
-    {
-        save_qtree_as_ppm_helper(root->children[i], file);
-    }
-    fclose(file);
+    (void)*root;
+    (void)*filename;
 }
