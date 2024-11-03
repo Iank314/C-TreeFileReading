@@ -278,7 +278,7 @@ void fill_region(unsigned char *buffer, unsigned char intensity, int start_row, 
         }
     }
 }
-void save_qtree_as_ppm_helper(QTNode *node, FILE *fp)
+void save_qtree_as_ppm_helper(QTNode *node, FILE *fp) 
 {
     if (node == NULL) return;
 
@@ -294,14 +294,13 @@ void save_qtree_as_ppm_helper(QTNode *node, FILE *fp)
         }
     } 
     else 
-    {
+    { 
         save_qtree_as_ppm_helper(node->children[0], fp);
         save_qtree_as_ppm_helper(node->children[1], fp);
         save_qtree_as_ppm_helper(node->children[2], fp);
         save_qtree_as_ppm_helper(node->children[3], fp);
     }
 }
-
 void save_qtree_as_ppm(QTNode *root, char *filename) 
 {
     FILE *fp = fopen(filename, "w");
