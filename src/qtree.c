@@ -263,7 +263,6 @@ void save_preorder_qt(QTNode *root, char *filename)
     save_preorder_qt_helper(root, file, 0, 0, root->width, root->height);
     fclose(file);
 }
-
 void fill_region(unsigned char *buffer, unsigned char intensity, int start_row, int start_col, int width, int height, int image_width) 
 {
     for (int i = start_row; i < start_row + height; i++) 
@@ -283,21 +282,15 @@ static void save_ppm_helper(QTNode *node, unsigned char *buffer, int row, int co
     if (!node)
         return;
 
-
     if (node->is_leaf)
     {
-
-
         fill_region(buffer, node->intensity, row, col, width, height, image_width);
     }
     else
     {
-
-
         int half_width = (width + 1) / 2;
         int half_height = (height + 1) / 2;
-
-
+        
         save_ppm_helper(node->children[0], buffer, row, col, half_width, half_height, image_width);
         save_ppm_helper(node->children[1], buffer, row, col + half_width, width - half_width, half_height, image_width);
         save_ppm_helper(node->children[2], buffer, row + half_height, col, half_width, height - half_height, image_width);
@@ -305,60 +298,45 @@ static void save_ppm_helper(QTNode *node, unsigned char *buffer, int row, int co
     }
 }
 
-
 void save_qtree_as_ppm(QTNode *root, char *filename)
 {
-    if (!root || !filename) {
+    if (!root || !filename) 
+    {
         ERROR("Invalid root or filename in save_qtree_as_ppm.");
         return;
     }
 
-
     int image_width = root->width;
     int image_height = root->height;
 
-
     FILE *file = fopen(filename, "w");
-    if (!file)
+    if (!file) 
     {
         ERROR("Failed to open file for writing PPM.");
         return;
     }
 
-
     fprintf(file, "P3\n%d %d\n255\n", image_width, image_height);
+
     unsigned char *buffer = (unsigned char *)malloc(image_width * image_height * 3);
-    if (!buffer)
-    {
+    if (!buffer) {
         ERROR("Memory allocation failed for image buffer.");
         fclose(file);
         return;
     }
 
-
     save_ppm_helper(root, buffer, 0, 0, image_width, image_height, image_width);
 
-
-    for (int i = 0; i < image_width * image_height * 3; i += 3)
+    for (int i = 0; i < image_height; i++) 
     {
-        fprintf(file, "%d %d %d ", buffer[i], buffer[i + 1], buffer[i + 2]);
-        if ((i / 3 + 1) % image_width == 0)
+        for (int j = 0; j < image_width; j++) 
         {
-            fprintf(file, "\n");
+            int index = (i * image_width + j) * 3;
+            fprintf(file, "%d %d %d ", buffer[index], buffer[index + 1], buffer[index + 2]);
         }
+        fprintf(file, "\n");  
     }
-
 
     free(buffer);
     fclose(file);
 }
-
-
-
-
-
-
-
-
-
-
