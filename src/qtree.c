@@ -207,15 +207,15 @@ void save_preorder_qt_helper(QTNode *node, FILE *file, int depth)
 
     if (node->is_leaf) 
     {
-        fprintf(file, "%c %hhu %d %d\n", 'L', node->intensity, node->height, node->width);
-    }
-     else 
-     {
-        fprintf(file, "%c %hhu %d %d\n", 'N', node->intensity, node->height, node->width);
-        save_preorder_qt_helper(node->children[0], file, depth + 1);
-        save_preorder_qt_helper(node->children[1], file, depth + 1);
-        save_preorder_qt_helper(node->children[2], file, depth + 1);
-        save_preorder_qt_helper(node->children[3], file, depth + 1);
+        fprintf(file, "L %hhu %d %d\n", node->intensity, node->height, node->width);
+    } 
+    else 
+    {
+        fprintf(file, "N %hhu %d %d\n", node->intensity, node->height, node->width);
+        for (int i = 0; i < 4; i++) 
+        {
+            save_preorder_qt_helper(node->children[i], file, depth + 1);
+        }
     }
 }
 
