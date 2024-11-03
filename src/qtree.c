@@ -267,44 +267,46 @@ void save_preorder_qt(QTNode *root, char *filename)
 }
 
 
-void save_qtree_as_ppm_helper(QTNode *node, FILE *file, int start_row, int start_col, int image_width)
+
+void save_qtree_as_ppm_helper(QTNode *node, FILE *file)
 {
     if (node == NULL) 
     {
         return;
     }
 
-    if (node->is_leaf == 1) {
-        for (int i = 0; i < node->height; i++) 
+    if (node->is_leaf == 1) 
+    {
+        for (int i = 0; i < node->width * node->height; i++) 
         {
-            for (int j = 0; j < node->width; j++) 
-            {
-                fprintf(file, "%hhu %hhu %hhu ", node->intensity, node->intensity, node->intensity);
-            }
-            fprintf(file, "\n");
+            fprintf(file, "%hhu %hhu %hhu ", node->intensity, node->intensity, node->intensity);
         }
         return;
     }
 
-    int half_width = node->width / 2;
-    int half_height = node->height / 2;
-
-    if (node->children[0]) save_qtree_as_ppm_helper(node->children[0], file, start_row, start_col, image_width);
-    if (node->children[1]) save_qtree_as_ppm_helper(node->children[1], file, start_row, start_col + half_width, image_width);
-    if (node->children[2]) save_qtree_as_ppm_helper(node->children[2], file, start_row + half_height, start_col, image_width);
-    if (node->children[3]) save_qtree_as_ppm_helper(node->children[3], file, start_row + half_height, start_col + half_width, image_width);
+    for (int i = 0; i < 4; i++) 
+    {
+        if (node->children[i]) 
+        {
+            save_qtree_as_ppm_helper(node->children[i], file);
+        }
+    }
 }
 
 void save_qtree_as_ppm(QTNode *root, char *filename)
 {
     FILE *file = fopen(filename, "w");
-    if (file == NULL) {
+    if (file == NULL) 
+    {
+        ERROR("Failed to open file for writing.");
         return;
     }
 
-    fprintf(file, "P3\n%d %d\n255\n", root->width, root->height);
+    fprintf(file, "P3\n");
+    fprintf(file, "%d %d\n", root->width, root->height);
+    fprintf(file, "255\n");
 
-    save_qtree_as_ppm_helper(root, file, 0, 0, root->width);
+    save_qtree_as_ppm_helper(root, file);
 
     fclose(file);
 }
