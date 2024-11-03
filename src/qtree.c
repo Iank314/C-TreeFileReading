@@ -60,7 +60,8 @@ QTNode *create_quadtree_recursive(Image *image, int x, int y, int width, int hei
         node->children[1] = create_quadtree_recursive(image, x + half_width, y, width - half_width, height, max_rmse);
         node->children[2] = NULL;
         node->children[3] = NULL;
-    } else if (width == 1) 
+    } 
+    else if (width == 1) 
     {
         node->children[0] = create_quadtree_recursive(image, x, y, width, half_height, max_rmse);
         node->children[2] = create_quadtree_recursive(image, x, y + half_height, width, height - half_height, max_rmse);
@@ -182,12 +183,14 @@ static QTNode *load_preorder_qt_helper(FILE *file)
 QTNode *load_preorder_qt(char *filename) 
 {
     FILE *file = fopen(filename, "r");
-    if (!file) {
+    if (!file) 
+    {
         return NULL;
     }
     QTNode *root = load_preorder_qt_helper(file);
     fclose(file);
-    if (!root) {
+    if (!root) 
+    {
         ERROR("Failed to load quadtree from file.");
     }
     return root;
@@ -205,8 +208,6 @@ static void save_preorder_qt_helper(QTNode *node, FILE *file, int row, int col, 
     else
     {
         fprintf(file, "N %d %d %d %d %d\n", node->intensity, row, height, col, width);
-
-
         if (width > 1 && height > 1)
         {
             int half_width = width / 2;
@@ -260,10 +261,10 @@ void save_qtree_as_ppm_helper(QTNode *node, FILE *file)
     } 
     else 
     {
-        save_qtree_as_ppm_helper(node->children[0], file);
-        save_qtree_as_ppm_helper(node->children[1], file);
-        save_qtree_as_ppm_helper(node->children[2], file);
-        save_qtree_as_ppm_helper(node->children[3], file);
+       for (int i = 0; i < 4; i++) 
+        {
+            save_qtree_as_ppm_helper(node->children[i], file);
+        }
     }
 }
 
