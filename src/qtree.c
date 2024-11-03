@@ -193,42 +193,54 @@ QTNode *load_preorder_qt(char *filename)
     return root;
 }
 
-void save_preorder_qt_helper(QTNode *node, FILE *file, int depth) 
+static void save_preorder_qt_helper(QTNode *node, FILE *file, int row, int col, int width, int height)
 {
-    if (node == NULL) 
-    {
-        return;
-    }
+    if (!node) return;
 
-    for (int i = 0; i < depth; i++) 
-    {
-        fprintf(file, "   ");
-    }
 
-    if (node->is_leaf) 
+    if (node->is_leaf)
     {
-        fprintf(file, "L %hhu %d %d\n", node->intensity, node->height, node->width);
-    } 
-    else 
+        fprintf(file, "L %d %d %d %d %d\n", node->intensity, row, height, col, width);
+    }
+    else
     {
-        fprintf(file, "N %hhu %d %d\n", node->intensity, node->height, node->width);
-        for (int i = 0; i < 4; i++) 
+        fprintf(file, "N %d %d %d %d %d\n", node->intensity, row, height, col, width);
+
+
+        if (width > 1 && height > 1)
         {
-            save_preorder_qt_helper(node->children[i], file, depth + 1);
+            int half_width = width / 2;
+            int half_height = height / 2;
+            save_preorder_qt_helper(node->children[0], file, row, col, half_width, half_height);
+            save_preorder_qt_helper(node->children[1], file, row, col + half_width, width - half_width, half_height);
+            save_preorder_qt_helper(node->children[2], file, row + half_height, col, half_width, height - half_height);
+            save_preorder_qt_helper(node->children[3], file, row + half_height, col + half_width, width - half_width, height - half_height);
+        }
+        else if (width > 1)
+        {
+            int half_width = width / 2;
+            save_preorder_qt_helper(node->children[0], file, row, col, half_width, height);
+            save_preorder_qt_helper(node->children[1], file, row, col + half_width, width - half_width, height);
+        }
+        else if (height > 1)
+        {
+            int half_height = height / 2;
+            save_preorder_qt_helper(node->children[0], file, row, col, width, half_height);
+            save_preorder_qt_helper(node->children[2], file, row + half_height, col, width, height - half_height);
         }
     }
 }
 
-void save_preorder_qt(QTNode *root, char *filename) 
+
+void save_preorder_qt(QTNode *root, char *filename)
 {
     FILE *file = fopen(filename, "w");
-    if (file == NULL) 
+    if (!file)
     {
-        ERROR("Failed to open file %s for writing", filename);
+        ERROR("Failed to open file for writing.");
         return;
     }
-
-    save_preorder_qt_helper(root, file, 0);
+    save_preorder_qt_helper(root, file, 0, 0, root->width, root->height);
     fclose(file);
 }
 
